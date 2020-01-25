@@ -1,0 +1,3 @@
+[submodule "pkgs/tabletrobotface-starter-lib"]
+	path = pkgs/tabletrobotface-starter-lib
+	url = git@gitlab.com:mjyc/tabletrobotface-starter-lib.git
