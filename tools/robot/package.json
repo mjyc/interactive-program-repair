@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@cycle/run": "5.2.0",
-    "tabletrobotface-starter-lib": "file:../../",
+    "tabletrobotface-starter-lib": "file:../../pkgs/tabletrobotface-starter-lib",
     "xstream": "^11.11.0"
   },
   "devDependencies": {
