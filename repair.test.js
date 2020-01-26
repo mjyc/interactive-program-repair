@@ -1,3 +1,4 @@
+const { promisify } = require("util");
 const { makeNeckExercise } = require("./example_programs");
 const { runProgramOffline } = require("./repair");
 
@@ -13,35 +14,19 @@ describe("runPrograms", () => {
         logger.warn(`No test file '${path}'`);
         return;
       }
-      const { settings, traces } = JSON.parse(fs.readFileSync(path));
+      const { settings, traces: inputTraces } = JSON.parse(
+        fs.readFileSync(path)
+      );
 
-      console.log(settings, traces);
+      const createProgram = makeNeckExercise;
+      const outputs = await promisify(runProgramOffline)({
+        createProgram,
+        programParams: {},
+        programOpts: {},
+        inputTraces
+      });
 
-      // const createProgram = programs[settings.name];
-      // const inputTraces = traces;
-      // const instructions =
-      //   programs.instructions[settings.name][settings.instIndex];
-      // const outputs = await Promise.all([
-      //   promisify(runProgramAsFunctionCall)({
-      //     createProgram,
-      //     inputTraces,
-      //     programOpts: {
-      //       instructions,
-      //       startImmediately: false
-      //     }
-      //   }),
-      //   promisify(runProgramOffline)({
-      //     createProgram,
-      //     inputTraces,
-      //     programOpts: {
-      //       instructions,
-      //       startImmediately: false
-      //     }
-      //   })
-      // ]);
-
-      // logger.debug("runProgramAsFunctionCall", outputs[0].state);
-      // logger.debug("runProgramOffline", outputs[1].state);
+      logger.debug("runProgramOffline", outputs);
       // logger.debug("recorded state trace", inputTraces.state); // IMPORTANT!! The inputTraces.state[0].stamp !== 0 because recordStreams cannot record events with stamp === 0
       // expect(outputs[0].state).toEqual(outputs[1].state);
       expect(1).toEqual(1);

@@ -82,22 +82,27 @@ const makeInstructor = ({
     );
     const i$ = model$
       .filter(x => x.started)
-      .compose(dropRepeats((a, b) => a.i === b.i));
+      .compose(dropRepeats((a, b) => a.i === b.i))
+      .map(x => x.i);
 
-    const state$ = i$.map(i => `S${x}`);
+    const state$ = i$.map(i => `S${i}`);
     const setMessage$ = xs.merge(
       start.take(1).mapTo("Hello! Are you ready?"),
-      i$.map(x => instructions[x.i])
+      i$.map(i => instructions[i])
     );
-    const askMultipleChoice$ = i$.map(x =>
-      x.i === 0
+    const askMultipleChoice$ = i$.map(i =>
+      i === 0
         ? ["Next"]
-        : x.i === instructions.length - 1
+        : i === instructions.length - 1
         ? ["Go back", "Done"]
         : ["Go back", "Next"]
     );
 
-    return { setMessage: setMessage$, askMultipleChoice: askMultipleChoice$ };
+    return {
+      state: state$,
+      setMessage: setMessage$,
+      askMultipleChoice: askMultipleChoice$
+    };
   };
 };
 
