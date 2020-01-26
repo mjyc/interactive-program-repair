@@ -1,5 +1,6 @@
 const xs = require("xstream").default;
 const dropRepeats = require("xstream/extra/dropRepeats").default;
+const extractPoseFeatures = require("./extractPoseFeatures");
 
 const makeStateDetector = (
   {
@@ -21,7 +22,6 @@ const makeStateDetector = (
         return x < minLevel ? -1 : x > maxLevel ? 1 : 0;
       })
       .compose(dropRepeats());
-    instState$.addListener({ next: console.warn });
     const state$ = instState$
       .map(x => {
         return xs
@@ -35,8 +35,24 @@ const makeStateDetector = (
   };
 };
 
-module.exports = {
-  makeStateDetector
+const makeNeckExercise = () => {
+  return sources => {
+    const poseFeatures$ = sources.poses.map(poses =>
+      poses.length === 0 ? {} : extractPoseFeatures(poses[0])
+    );
+    const faceAngle$ = poseFeatures$.map(({ faceAngle }) => faceAngle);
+    const state$ = makeStateDetector(
+      {
+        minLevel: -15,
+        maxLevel: 15,
+        activeTimeout: 500,
+        inactiveTimeout: 2000
+      },
+      { initState: 0 }
+    )({ level: faceAngle$, Time: sources.Time });
+
+    return { setMessage: state$.map(x => `${x}`) };
+  };
 };
 
 // const makeInstructor = ({
@@ -209,3 +225,8 @@ module.exports = {
 //     );
 //   };
 // };
+
+module.exports = {
+  makeStateDetector,
+  makeNeckExercise
+};
