@@ -63,7 +63,8 @@ const makeInstructor = ({
             ? model.i + computeDelta(intent, model.i)
             : model.i;
         const i =
-          tmpi >= 0 && (instructions.length === 0 || tmpi < instructions.length)
+          tmpi >= 0 &&
+          (instructions.length === 0 || tmpi <= instructions.length)
             ? tmpi
             : model.i;
         const lastUserIntent =
@@ -85,23 +86,29 @@ const makeInstructor = ({
       .compose(dropRepeats((a, b) => a.i === b.i))
       .map(x => x.i);
 
-    const state$ = i$.map(i => `S${i}`);
+    const startRecording$ = i$.take(1).mapTo(true);
     const setMessage$ = xs.merge(
       start.take(1).mapTo("Hello! Are you ready?"),
-      i$.map(i => instructions[i])
+      i$.map(i => (i === instructions.length ? "" : instructions[i]))
     );
-    const askMultipleChoice$ = i$.map(i =>
-      i === 0
-        ? ["Next"]
-        : i === instructions.length - 1
-        ? ["Go back", "Done"]
-        : ["Go back", "Next"]
-    );
+    const askMultipleChoice$ = i$
+      .filter(i => i < instructions.length)
+      .map(i =>
+        i === 0
+          ? ["Next"]
+          : i === instructions.length - 1
+          ? ["Go back", "Done"]
+          : ["Go back", "Next"]
+      );
+    const state$ = i$
+      .filter(i => i < instructions.length)
+      .map(i => `S${i + 1}`);
 
     return {
-      state: state$,
+      startRecording: startRecording$,
       setMessage: setMessage$,
-      askMultipleChoice: askMultipleChoice$
+      askMultipleChoice: askMultipleChoice$,
+      state: state$
     };
   };
 };
@@ -124,7 +131,7 @@ const makeNeckExercise = () => {
           ? 1
           : 0
         : intent.type === "user"
-        ? intent.value === "Next"
+        ? intent.value === "Next" || intent.value === "Done"
           ? 1
           : intent.value === "Go back"
           ? -1
@@ -159,7 +166,7 @@ const makeNeckExercise = () => {
         .filter(([a, b]) => a === 0 && (b === -1 || b === 1))
         .map(([a, b]) => b),
       user: askMultipleChoiceFinished.filter(
-        x => x === "Go back" || x === "Next"
+        x => x === "Go back" || x === "Next" || x === "Done"
       )
     });
 
