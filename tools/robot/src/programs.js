@@ -211,7 +211,7 @@ const makeNeckExercise = () => {
         minLevel: -15,
         maxLevel: 15,
         activeTimeout: 500,
-        inactiveTimeout: 2000
+        inactiveTimeout: 500
       },
       { initState: 0 }
     )({ level: faceAngle$, Time });

@@ -16,7 +16,17 @@ if (settings.hideScroll) {
 }
 
 const makeProgram = () => {
-  return makeNeckExercise();
+  return sources => {
+    const ready$ = xs.combine(sources.tabletfaceLoaded, sources.poses.take(1));
+    return Object.assign(
+      {
+        setMessage: ready$.mapTo("Do you want to start?"),
+        askMultipleChoice: ready$.mapTo(["Yes"])
+        // startRecording: sources.askMultipleChoiceFinished.take(1).mapTo(true)
+      },
+      makeNeckExercise()(sources)
+    );
+  };
 };
 
 const main = TabletFaceRobotSandbox(makeProgram, {
