@@ -3,12 +3,13 @@
   "scripts": {
     "watch": "npx mkdirp dist && npx watchify src/index.js -t babelify --outfile dist/index.js -dv",
     "prestart": "test -e src/settings.json || echo {} > src/settings.json",
-    "start": "npx concurrently \"npm run watch\" \"npx live-server --watch=dist/index.js,index.html\""
+    "start": "npx concurrently \"npm run watch\" \"npx live-server --watch=dist/index.js,index.html\"",
+    "devel": "rm -rf node_modules/interactive-program-repair && ln -s ../../ node_modules/interactive-program-repair; rm -rf node_modules/tabletrobotface-starter-lib && ln -s ../../pkgs/tabletrobotface-starter-lib node_modules/tabletrobotface-starter-lib;"
   },
   "dependencies": {
     "@cycle/run": "5.2.0",
-    "interactive-program-repair": "file:../../",
-    "tabletrobotface-starter-lib": "file:../../pkgs/tabletrobotface-starter-lib"
+    "interactive-program-repair": "0.0.0",
+    "tabletrobotface-starter-lib": "0.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
