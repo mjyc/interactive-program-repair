@@ -19,17 +19,21 @@ describe("runPrograms", () => {
       );
 
       const createProgram = makeNeckExercise;
-      const outputs = await promisify(runProgramOffline)({
+      const output = await promisify(runProgramOffline)({
         createProgram,
         programParams: {},
         programOpts: {},
         inputTraces
       });
+      logger.debug("runProgramOffline", output.state);
+      logger.debug("recorded state trace", inputTraces.state);
 
-      logger.debug("runProgramOffline", outputs);
-      // logger.debug("recorded state trace", inputTraces.state); // IMPORTANT!! The inputTraces.state[0].stamp !== 0 because recordStreams cannot record events with stamp === 0
-      // expect(outputs[0].state).toEqual(outputs[1].state);
-      expect(1).toEqual(1);
+      const expected = inputTraces.state.map(x => ({
+        type: "next",
+        value: x.value,
+        time: x.stamp
+      }));
+      expect(output.state).toEqual(expected);
     });
   });
 });

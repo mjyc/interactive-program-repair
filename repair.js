@@ -29,14 +29,13 @@ const runProgramOffline = (
   callback
 ) => {
   const Time = mockTimeSource();
-  console.log("Time", Time);
   const inputStreams = Object.keys(inputTraces).reduce((prev, k) => {
     prev[k] = convertRecordedStreamToXStream(Time, inputTraces[k]);
     return prev;
   }, {});
 
   const prog = createProgram(progParams, programOpts);
-  const outputStreams = prog(inputStreams);
+  const outputStreams = prog(Object.assign({ Time }, inputStreams));
 
   const outputTraces = {};
   Object.keys(outputStreams).map(k => {
