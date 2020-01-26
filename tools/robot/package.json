@@ -7,8 +7,8 @@
   },
   "dependencies": {
     "@cycle/run": "5.2.0",
-    "tabletrobotface-starter-lib": "file:../../pkgs/tabletrobotface-starter-lib",
-    "xstream": "^11.11.0"
+    "interactive-program-repair": "file:../../",
+    "tabletrobotface-starter-lib": "file:../../pkgs/tabletrobotface-starter-lib"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

@@ -1,10 +1,9 @@
-import xs from "xstream";
 import { run } from "@cycle/run";
 import {
   createTabletFaceRobotSandboxDrivers,
   TabletFaceRobotSandbox
 } from "tabletrobotface-starter-lib";
-import { makeNeckExercise } from "./programs";
+import { makeNeckExercise } from "interactive-program-repair/example_programs";
 
 const settings = Object.assign(
   // defaults to "dev" setting
