@@ -3,11 +3,14 @@
   "version": "0.0.4",
   "description": "Interactive program repair in JavaScript",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "npx jest"
+  },
   "author": "Michael Jae-Yoon Chung",
   "license": "MIT",
   "repository": "https://gitlab.com/mjyc/interactive-program-repair",
   "dependencies": {
+    "@cycle/time": "0.19.0",
     "xstream": "11.11.0"
   },
   "devDependencies": {}

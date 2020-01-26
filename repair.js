@@ -1,50 +1,53 @@
-const { promisify } = require("es6-promisify");
-const mapValues = require("lodash/fp/mapValues");
-const range = require("lodash/fp/range");
-const rangeStep = require("lodash/fp/rangeStep");
-const listrp = require("listrp");
-const streams = require("listrp/streams");
-const {
-  convertRecordedStreamToStream,
-  mockTimeSource
-} = require("listrp/cyclebridge");
-const { computeOverlap } = require("./utils");
-const logger = require("./logger");
+const { mockTimeSource } = require("@cycle/time");
+
+const convertRecordedStreamToCycleTimeRecordedStream = recorded => {
+  return recorded.map(x => ({
+    type: "next",
+    value: x.value,
+    time: x.stamp
+  }));
+};
+
+const convertRecordedStreamToXStream = (Time, recorded) => {
+  const cycleTimeRecorded = convertRecordedStreamToCycleTimeRecordedStream(
+    recorded
+  );
+  const schedule = Time._scheduler;
+  return xs.create({
+    start: listener => {
+      cycleTimeRecorded.map(({ value, time }) => {
+        schedule.next(listener, time, value);
+      });
+    },
+    stop: () => {}
+  });
+};
 
 const runProgramOffline = (
-  { createProgram, progParams, inputTraces, programOpts = {} },
+  { createProgram, progParams, programOpts = {}, inputTraces },
   callback
 ) => {
   const Time = mockTimeSource();
   const inputStreams = Object.keys(inputTraces).reduce((prev, k) => {
-    prev[k] = convertRecordedStreamToStream(Time, inputTraces[k]);
+    prev[k] = convertRecordedStreamToXStream(Time, inputTraces[k]);
     return prev;
   }, {});
 
-  streams.sdelay = Time.delay;
-  streams.sdebounce = Time.debounce;
-  // IMPORTANT!! this is just a placeholder
-  streams.sbuffer = () => {
-    return () => {
-      return streams.sempty;
-    };
-  };
-  const prog = createProgram(
-    progParams,
-    Object.assign(programOpts, { ss: streams })
-  );
-  const outputStreams = prog(inputStreams);
+  console.log("inputStreams", inputStreams);
 
-  const outputTraces = {};
-  Object.keys(outputStreams).map(k => {
-    Time.record(outputStreams[k])(x => {
-      outputTraces[k] = x;
-    });
-  });
+  // const prog = createProgram(progParams, programOpts);
+  // const outputStreams = prog(inputStreams);
 
-  Time.run(err => {
-    callback(err, outputTraces);
-  });
+  // const outputTraces = {};
+  // Object.keys(outputStreams).map(k => {
+  //   Time.record(outputStreams[k])(x => {
+  //     outputTraces[k] = x;
+  //   });
+  // });
+
+  // Time.run(err => {
+  //   callback(err, outputTraces);
+  // });
 };
 
 module.exports = {
