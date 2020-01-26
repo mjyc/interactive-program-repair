@@ -5,11 +5,17 @@ import {
 } from "tabletrobotface-starter-lib";
 import { makeNeckExercise } from "interactive-program-repair/example_programs";
 
-const settings = Object.assign(
-  // defaults to "dev" setting
-  { record: true, displayPoseViz: true, hideScroll: false },
-  require("./settings.json")
-);
+// defaults to "dev" setting
+const settings = {
+  record: true,
+  displayPoseViz: true,
+  hideScroll: false
+};
+try {
+  Object.assign(settings, require("./settings.json"));
+} catch (err) {
+  console.warn(err);
+}
 if (settings.hideScroll) {
   document.body.style.overflow = "hidden";
 }
