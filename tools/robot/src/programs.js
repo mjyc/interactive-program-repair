@@ -38,7 +38,7 @@ const makeStateDetector = (
 
 const makeInstructor = ({
   instructions = [],
-  computeDelta = (detectorVal, i) => 0
+  computeDelta = (intent, i) => 0
 } = {}) => {
   if (instructions.length === 0)
     throw new RangeError(`instructions.length === 0`);
@@ -58,36 +58,26 @@ const makeInstructor = ({
         const started = intent.type === "start" ? true : model.started;
         const tmpi =
           model.started &&
-          !model.hold &&
+          (model.lastUserIntent !== "Go back" || intent.type === "user") &&
           (intent.type === "detector" || intent.type === "user")
-            ? model.i + computeDelta(intent.value, model.i)
+            ? model.i + computeDelta(intent, model.i)
             : model.i;
         const i =
           tmpi >= 0 && (instructions.length === 0 || tmpi < instructions.length)
             ? tmpi
             : model.i;
-        // const lastHumanInput =
-        //   intent === "Next" ||
-        //   intent === "Go back" ||
-        //   intent === "Yes" ||
-        //   intent === "No" ||
-        //   intent === "What's next?" ||
-        //   intent === "Done! Let's move on" // defined in "tools/robot/src/index.js"
-        //     ? intent
-        //     : model.lastHumanInput;
-        // const hold = lastHumanInput === "Go back";
+        const lastUserIntent =
+          intent.type === "user" ? intent.value : model.lastUserIntent;
         return {
           started,
-          i
-          // lastUserIntent,
-          // hold
+          i,
+          lastUserIntent
         };
       },
       {
         started: false,
-        i: 0
-        // lastUserIntent: "",
-        // hold: false
+        i: 0,
+        lastUserIntent: ""
       }
     );
     const i$ = model$
@@ -121,11 +111,19 @@ const makeNeckExercise = () => {
       "Tilt your head to RIGHT (6/6)",
       "Great!"
     ],
-    computeDelta: (detectorVal, i) => {
-      return (i % 2 === 0 && detectorVal === -1) ||
-        (i % 2 === 1 && detectorVal === 1)
-        ? 1
-        : 0;
+    computeDelta: (intent, i) => {
+      return intent.type === "detector"
+        ? (i % 2 === 0 && intent.value === -1) ||
+          (i % 2 === 1 && intent.value === 1)
+          ? 1
+          : 0
+        : intent.type === "user"
+        ? intent.value === "Next"
+          ? 1
+          : intent.value === "Go back"
+          ? -1
+          : 0 // error
+        : 0; // error
     }
   });
 
@@ -153,8 +151,10 @@ const makeNeckExercise = () => {
       detector: state$
         .compose(pairwise)
         .filter(([a, b]) => a === 0 && (b === -1 || b === 1))
-        .map(([a, b]) => b)
-      // user: askMultipleChoice.filter().map()
+        .map(([a, b]) => b),
+      user: askMultipleChoiceFinished.filter(
+        x => x === "Go back" || x === "Next"
+      )
     });
 
     // setup outputs
