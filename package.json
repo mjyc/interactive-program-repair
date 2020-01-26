@@ -1,6 +1,6 @@
 {
   "name": "interactive-program-repair",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Interactive program repair in JavaScript",
   "main": "index.js",
   "scripts": {},
