@@ -5,7 +5,7 @@ const extractPoseFeatures = require("./extractPoseFeatures");
 
 const makeStateDetector = (
   {
-    minLevel = Number.MIN_VALUE,
+    minLevel = -Number.MAX_VALUE,
     maxLevel = Number.MAX_VALUE,
     activeTimeout = 0,
     inactiveTimeout = 0
@@ -84,6 +84,7 @@ const makeInstructor = ({
       .filter(x => x.started)
       .compose(dropRepeats((a, b) => a.i === b.i));
 
+    const state$ = i$.map(i => `S${x}`);
     const setMessage$ = xs.merge(
       start.take(1).mapTo("Hello! Are you ready?"),
       i$.map(x => instructions[x.i])
@@ -137,8 +138,8 @@ const makeNeckExercise = () => {
     const faceAngle$ = poseFeatures$.map(({ faceAngle }) => faceAngle);
     const state$ = makeStateDetector(
       {
-        minLevel: -15,
-        maxLevel: 15,
+        // minLevel: -15,
+        // maxLevel: 15,
         activeTimeout: 0,
         inactiveTimeout: 500
       },

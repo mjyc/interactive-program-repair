@@ -3,11 +3,12 @@
   "scripts": {
     "watch": "npx mkdirp dist && npx watchify src/index.js -t babelify --outfile dist/index.js -dv",
     "prestart": "test -e src/settings.json || echo {} > src/settings.json",
-    "start": "npx concurrently \"npm run watch\" \"npx live-server --watch=dist/index.js,index.html\""
+    "start": "npx concurrently \"npm run watch\" \"npx live-server --watch=dist/index.js,index.html\"",
+    "devel": "rm -rf node_modules/tabletrobotface-starter-lib && ln -s ../../../pkgs/tabletrobotface-starter-lib node_modules/tabletrobotface-starter-lib;"
   },
   "dependencies": {
     "@cycle/run": "5.2.0",
-    "tabletrobotface-starter-lib": "file:../../pkgs/tabletrobotface-starter-lib",
+    "tabletrobotface-starter-lib": "0.0.3",
     "xstream": "11.10.0"
   },
   "devDependencies": {
