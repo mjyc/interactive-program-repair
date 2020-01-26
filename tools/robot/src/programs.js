@@ -36,7 +36,10 @@ const makeStateDetector = (
   };
 };
 
-const makeInstructor = ({ instructions = [] } = {}) => {
+const makeInstructor = ({
+  instructions = [],
+  computeDelta = (detectorVal, i) => 0
+} = {}) => {
   if (instructions.length === 0)
     throw new RangeError(`instructions.length === 0`);
   return ({
@@ -45,162 +48,90 @@ const makeInstructor = ({ instructions = [] } = {}) => {
     user = xs.never()
   } = {}) => {
     const intent$ = xs.merge(
-      start.take(1).mapTo({ type: "start", value: null }), // TODO: take the first one only...
-      detector.map(x => ({ type: "detector", value: x })), // TODO:
+      start.take(1).mapTo({ type: "start", value: null }),
+      detector.map(x => ({ type: "detector", value: x })),
       user.map(x => ({ type: "user", value: x }))
     );
 
-    intent$.addListener({ next: console.log });
+    const model$ = intent$.fold(
+      (model, intent) => {
+        const started = intent.type === "start" ? true : model.started;
+        const tmpi =
+          model.started &&
+          !model.hold &&
+          (intent.type === "detector" || intent.type === "user")
+            ? model.i + computeDelta(intent.value, model.i)
+            : model.i;
+        const i =
+          tmpi >= 0 && (instructions.length === 0 || tmpi < instructions.length)
+            ? tmpi
+            : model.i;
+        // const lastHumanInput =
+        //   intent === "Next" ||
+        //   intent === "Go back" ||
+        //   intent === "Yes" ||
+        //   intent === "No" ||
+        //   intent === "What's next?" ||
+        //   intent === "Done! Let's move on" // defined in "tools/robot/src/index.js"
+        //     ? intent
+        //     : model.lastHumanInput;
+        // const hold = lastHumanInput === "Go back";
+        return {
+          started,
+          i
+          // lastUserIntent,
+          // hold
+        };
+      },
+      {
+        started: false,
+        i: 0
+        // lastUserIntent: "",
+        // hold: false
+      }
+    );
+    const i$ = model$
+      .filter(x => x.started)
+      .compose(dropRepeats((a, b) => a.i === b.i));
 
-    // const model$ = ss.sscan(
-    //   (model, intent) => {
-    //     const started = intent.type === "start" ? true : model.started;
-    //     const tmpi =
-    //       model.started &&
-    //       !model.hold &&
-    //       (intent.type === "detector" || intent.type === "user")
-    //         ? i + intent.value
-    //         : i;
-    //     const i =
-    //       tmpi >= 0 && (instructions.length === 0 || tmpi < instructions.length)
-    //         ? tmpi
-    //         : model.i;
+    const setMessage$ = xs.merge(
+      start.take(1).mapTo("Hello! Are you ready?"),
+      i$.map(x => instructions[x.i])
+    );
+    const askMultipleChoice$ = i$.map(x =>
+      x.i === 0
+        ? ["Next"]
+        : x.i === instructions.length - 1
+        ? ["Go back", "Done"]
+        : ["Go back", "Next"]
+    );
 
-    //     // const lastHumanInput =
-    //     //   intent === "Next" ||
-    //     //   intent === "Go back" ||
-    //     //   intent === "Yes" ||
-    //     //   intent === "No" ||
-    //     //   intent === "What's next?" ||
-    //     //   intent === "Done! Let's move on" // defined in "tools/robot/src/index.js"
-    //     //     ? intent
-    //     //     : model.lastHumanInput;
-    //     // const hold = lastHumanInput === "Go back";
-    //     return {
-    //       started,
-    //       i,
-    //       ready,
-    //       lastUserIntent,
-    //       hold
-    //     };
-    //   },
-    //   {
-    //     started: false,
-    //     i: 0,
-    //     ready: false,
-    //     detecting: false,
-    //     lastHumanInput: "Let's do this!", // defined in 'askMultipleChoice$' definition
-    //     hold: false
-    //   },
-    //   intent$
-    // );
-
-    // const state$ = ss.sdistinctUntilChanged(
-    //   (a, b) => a === b,
-    //   ss.smap(m => m.i, model$)
-    // );
-
-    // const setMessage$ = ss.smerge(
-    //   ss.smapTo("Hello! Are you ready?", sources.tabletfaceLoaded),
-    //   ss.smap(
-    //     x =>
-    //       x.i === -1
-    //         ? ""
-    //         : instructions.length === 0
-    //         ? `instruction#${x.i}`
-    //         : instructions[Math.floor(x.i)], // need Math.floor to handle 'mode = "yesno"' case
-    //     ss.sfilter(
-    //       x =>
-    //         !!x.started &&
-    //         x.lastHumanInput !== "What's next?" &&
-    //         x.lastHumanInput !== "Done! Let's move on",
-    //       model$
-    //     )
-    //   )
-    // );
-    // const askMultipleChoice$ = ss.smerge(
-    //   ss.smapTo(["Let's do this!"], sources.tabletfaceLoaded),
-    //   ss.smap(
-    //     x =>
-    //       x.i === 0
-    //         ? mode === "yesno"
-    //           ? ["Yes", "No"]
-    //           : ["Next"]
-    //         : Math.floor(x.i) === instructions.length - 1 // need Math.floor to handle 'mode = "yesno"' case
-    //         ? ["Go back", "What's next?"]
-    //         : mode === "yesno"
-    //         ? ["Go back", "Yes", "No"]
-    //         : ["Go back", "Next"],
-    //     ss.sfilter(
-    //       x =>
-    //         !!x.started &&
-    //         x.lastHumanInput !== "What's next?" &&
-    //         x.lastHumanInput !== "Done! Let's move on",
-    //       model$
-    //     )
-    //   )
-    // );
-
-    return {};
-    // return Object.assign(
-    //   {},
-    //   {
-    //     detector: sources.detector,
-    //     state: state$,
-    //     setMessage: setMessage$,
-    //     askMultipleChoice: askMultipleChoice$,
-    //     followFace: ss.smap(
-    //       x => x.started && x.detecting && x.i !== instructions.length - 1,
-    //       model$
-    //     ),
-    //     express: ss.sdistinctUntilChanged(
-    //       // smile with the last instruction
-    //       (a, b) => a === b,
-    //       ss.smap(
-    //         () => "HAPPY",
-    //         ss.sfilter(x => x.i === instructions.length - 1, model$)
-    //       )
-    //     )
-    //   },
-    //   mode === "yesno"
-    //     ? {
-    //         say: ss.smap(
-    //           intent => `I got ${intent}`,
-    //           ss.sfilter(
-    //             intent => intent === "Yes" || intent === "No",
-    //             ss.smap(
-    //               intent =>
-    //                 intent === "nod"
-    //                   ? "Yes"
-    //                   : intent === "shake"
-    //                   ? "No"
-    //                   : intent,
-    //               intent$
-    //             )
-    //           )
-    //         )
-    //       }
-    //     : {}
-    // );
+    return { setMessage: setMessage$, askMultipleChoice: askMultipleChoice$ };
   };
 };
 
 const makeNeckExercise = () => {
   const Instructor = makeInstructor({
     instructions: [
-      [
-        "Tilt your head to LEFT (1/6)",
-        "Tilt your head to RIGHT (2/6)",
-        "Tilt your head to LEFT (3/6)",
-        "Tilt your head to RIGHT (4/6)",
-        "Tilt your head to LEFT (5/6)",
-        "Tilt your head to RIGHT (6/6)",
-        "Great!"
-      ]
-    ]
+      "Tilt your head to LEFT (1/6)",
+      "Tilt your head to RIGHT (2/6)",
+      "Tilt your head to LEFT (3/6)",
+      "Tilt your head to RIGHT (4/6)",
+      "Tilt your head to LEFT (5/6)",
+      "Tilt your head to RIGHT (6/6)",
+      "Great!"
+    ],
+    computeDelta: (detectorVal, i) => {
+      return (i % 2 === 0 && detectorVal === -1) ||
+        (i % 2 === 1 && detectorVal === 1)
+        ? 1
+        : 0;
+    }
   });
 
-  return ({ tabletfaceLoaded, poses, Time }) => {
+  return ({ tabletfaceLoaded, poses, askMultipleChoiceFinished, Time }) => {
+    const ready$ = xs.combine(tabletfaceLoaded, poses.take(1));
+
     // setup StateDetector
     const poseFeatures$ = poses.map(poses =>
       poses.length === 0 ? {} : extractPoseFeatures(poses[0])
@@ -210,7 +141,7 @@ const makeNeckExercise = () => {
       {
         minLevel: -15,
         maxLevel: 15,
-        activeTimeout: 500,
+        activeTimeout: 0,
         inactiveTimeout: 500
       },
       { initState: 0 }
@@ -218,7 +149,7 @@ const makeNeckExercise = () => {
 
     // setup Instructor
     const instructorSink = Instructor({
-      start: tabletfaceLoaded.take(1).mapTo(true), // TODO; do this at upper layer
+      start: askMultipleChoiceFinished.filter(x => x === "I'm ready").take(1),
       detector: state$
         .compose(pairwise)
         .filter(([a, b]) => a === 0 && (b === -1 || b === 1))
@@ -226,7 +157,17 @@ const makeNeckExercise = () => {
       // user: askMultipleChoice.filter().map()
     });
 
-    return { setMessage: state$.map(x => `${x}`) };
+    // setup outputs
+    const setMessage$ = ready$.mapTo("Ready?");
+    const askMultipleChoice$ = ready$.mapTo(["I'm ready"]);
+
+    return Object.assign({}, instructorSink, {
+      setMessage: xs.merge(setMessage$, instructorSink.setMessage),
+      askMultipleChoice: xs.merge(
+        askMultipleChoice$,
+        instructorSink.askMultipleChoice
+      )
+    });
   };
 };
 
