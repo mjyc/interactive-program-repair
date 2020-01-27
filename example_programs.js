@@ -113,7 +113,12 @@ const makeInstructor = ({
   };
 };
 
-const makeNeckExercise = () => {
+const makeNeckExercise = ({
+  minLevel = -15,
+  maxLevel = 15,
+  activeTimeout = 0,
+  inactiveTimeout = 500
+} = {}) => {
   const Instructor = makeInstructor({
     instructions: [
       "Tilt your head to LEFT (1/6)",
@@ -149,12 +154,7 @@ const makeNeckExercise = () => {
     );
     const faceAngle$ = poseFeatures$.map(({ faceAngle }) => faceAngle);
     const state$ = makeStateDetector(
-      {
-        minLevel: -15,
-        maxLevel: 15,
-        activeTimeout: 0,
-        inactiveTimeout: 500
-      },
+      { minLevel, maxLevel, activeTimeout, inactiveTimeout },
       { initState: 0 }
     )({ level: faceAngle$, Time });
 

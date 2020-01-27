@@ -1,7 +1,12 @@
 const { promisify } = require("util");
+const mapValues = require("lodash/fp/mapValues");
+const range = require("lodash/fp/range");
+const rangeStep = require("lodash/fp/rangeStep");
 const xs = require("xstream").default;
 const { mockTimeSource } = require("@cycle/time");
 const { computeOverlap } = require("./utils");
+
+const logger = require("./logger");
 
 const convertRecordedStreamToCycleTimeRecordedStream = recorded => {
   return recorded.map(x => ({
@@ -79,7 +84,121 @@ const evaluateParams = async ({
   };
 };
 
+const repair = async ({
+  makeProgram,
+  inputTraces,
+  stateTrace,
+  options: {
+    computeOverlapBinSize = 100,
+    method = "search", // "search" or "bayesian"
+    domains = {},
+    prior = [] // used when method = "bayesian"
+  } = {}
+} = {}) => {
+  const search = async (domainSpaces, scoreFnc) => {
+    const helper = (keys, state) => {
+      if (keys.length === 0) {
+        logger.warn("Object.keys(domainSpaces) === 0");
+        return {};
+      }
+      if (keys.length === 1) {
+        const k = keys[0];
+        return domainSpaces[k].map(v => {
+          return Object.assign({}, state, { [k]: v });
+        });
+      } else {
+        const k = keys[0];
+        return [].concat(
+          ...domainSpaces[k].map(v => {
+            const newState = Object.assign({}, state, { [k]: v });
+            return helper(keys.slice(1), newState);
+          })
+        );
+      }
+    };
+
+    const space = helper(Object.keys(domainSpaces), {});
+    const priorSpace =
+      prior.length > 0
+        ? prior
+        : Array.from(Array(space.length).keys()).map(() => 1 / space.length);
+    const scores = [];
+    const startTime = Date.now();
+    for (let i = 0; i < space.length; i++) {
+      const score = await scoreFnc(space[i]);
+      const weightedScore =
+        method === "bayesian" ? score * priorSpace[i] : score;
+      scores.push(weightedScore);
+    }
+    if (method === "bayesian") {
+      const sum = scores.reduce((prev, score) => prev + score, 0);
+      for (let i = 0; i < scores.length; i++) {
+        scores[i] /= sum;
+      }
+    }
+    const elapsedTime = Date.now() - startTime;
+
+    const maxIndex = scores.indexOf(Math.max(...scores));
+    return {
+      goal: space[maxIndex],
+      score: scores[maxIndex],
+      scores,
+      elapsedTime
+    };
+  };
+
+  const domainSpaces = mapValues(rangeParams => {
+    return rangeParams.length === 2
+      ? range(...rangeParams)
+      : rangeParams.length === 3
+      ? rangeStep(rangeParams[2], rangeParams[0], rangeParams[1])
+      : rangeParams;
+  }, domains);
+  const searchOutput = await search(domainSpaces, async state => {
+    // if inputTraces and stateTrace are Arrays, return a sum of scores
+    if (Array.isArray(inputTraces)) {
+      let score = 0;
+      for (let i = 0; i < inputTraces.length; i++) {
+        score += (await evaluateParams({
+          makeProgram,
+          progParams: state,
+          inputTraces: inputTraces[i],
+          stateTrace: stateTrace[i],
+          options: {
+            binSize: computeOverlapBinSize
+          }
+        })).score;
+      }
+      return score / inputTraces.length;
+    }
+
+    return (await evaluateParams({
+      makeProgram,
+      progParams: state,
+      inputTraces,
+      stateTrace,
+      options: {
+        binSize: computeOverlapBinSize
+      }
+    })).score;
+  });
+
+  return method === "bayesian"
+    ? {
+        progParams: searchOutput.goal,
+        score: searchOutput.score,
+        posterior: searchOutput.scores,
+        elapsedTime: searchOutput.elapsedTime
+      }
+    : {
+        progParams: searchOutput.goal,
+        score: searchOutput.score,
+        elapsedTime: searchOutput.elapsedTime
+      };
+};
+
 module.exports = {
   runProgramOffline,
-  evaluateParams
+  evaluateParams,
+  repair
 };
