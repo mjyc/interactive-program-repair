@@ -13,7 +13,10 @@ const settings = {
   progName: "makeNeckExercise",
   progParams: {
     minLevel: -Number.MAX_VALUE,
-    maxLevel: Number.MAX_VALUE
+    maxLevel: Number.MAX_VALUE,
+    inactiveTimeout: 500,
+    useFaceAngle: true,
+    flipSign: false
   }
 };
 try {
