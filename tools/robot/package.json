@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@cycle/run": "5.2.0",
-    "interactive-program-repair": "0.0.4",
-    "tabletrobotface-starter-lib": "0.0.4",
+    "interactive-program-repair": "0.0.5",
+    "tabletrobotface-starter-lib": "0.0.5",
     "xstream": "11.11.0"
   },
   "devDependencies": {
