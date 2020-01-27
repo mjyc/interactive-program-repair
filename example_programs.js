@@ -150,8 +150,8 @@ const makeNeckExercise = () => {
     const faceAngle$ = poseFeatures$.map(({ faceAngle }) => faceAngle);
     const state$ = makeStateDetector(
       {
-        // minLevel: -15,
-        // maxLevel: 15,
+        minLevel: -15,
+        maxLevel: 15,
         activeTimeout: 0,
         inactiveTimeout: 500
       },

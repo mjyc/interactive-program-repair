@@ -1,5 +1,7 @@
+const { promisify } = require("util");
 const xs = require("xstream").default;
 const { mockTimeSource } = require("@cycle/time");
+const { computeOverlap } = require("./utils");
 
 const convertRecordedStreamToCycleTimeRecordedStream = recorded => {
   return recorded.map(x => ({
@@ -25,7 +27,7 @@ const convertRecordedStreamToXStream = (Time, recorded) => {
 };
 
 const runProgramOffline = (
-  { createProgram, progParams, programOpts = {}, inputTraces },
+  { makeProgram, progParams, inputTraces },
   callback
 ) => {
   const Time = mockTimeSource();
@@ -34,7 +36,7 @@ const runProgramOffline = (
     return prev;
   }, {});
 
-  const prog = createProgram(progParams, programOpts);
+  const prog = makeProgram(progParams);
   const outputStreams = prog(Object.assign({ Time }, inputStreams));
 
   const outputTraces = {};
@@ -49,6 +51,35 @@ const runProgramOffline = (
   });
 };
 
+const evaluateParams = async ({
+  makeProgram,
+  progParams,
+  inputTraces,
+  stateTrace,
+  options: { computeOverlapBinSize = 100 } = {}
+} = {}) => {
+  const outputTraces = await promisify(runProgramOffline)({
+    makeProgram,
+    progParams,
+    inputTraces
+  });
+  Object.keys(outputTraces).reduce((prev, k) => {
+    outputTraces[k] = outputTraces[k].map(x => ({
+      stamp: x.time,
+      value: x.value
+    }));
+  }, {});
+
+  const score = computeOverlap(stateTrace, outputTraces.state, {
+    binSize: computeOverlapBinSize
+  });
+  return {
+    outputStateTrace: outputTraces.state,
+    score
+  };
+};
+
 module.exports = {
-  runProgramOffline
+  runProgramOffline,
+  evaluateParams
 };
