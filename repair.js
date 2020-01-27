@@ -91,25 +91,25 @@ const repair = async ({
   options: {
     computeOverlapBinSize = 100,
     method = "search", // "search" or "bayesian"
-    domains = {},
+    domainSpace = {},
     prior = [] // used when method = "bayesian"
   } = {}
 } = {}) => {
-  const search = async (domainSpaces, scoreFnc) => {
+  const search = async (domainSpace, scoreFnc) => {
     const helper = (keys, state) => {
       if (keys.length === 0) {
-        logger.warn("Object.keys(domainSpaces) === 0");
+        logger.warn("Object.keys(domainSpace) === 0");
         return {};
       }
       if (keys.length === 1) {
         const k = keys[0];
-        return domainSpaces[k].map(v => {
+        return domainSpace[k].map(v => {
           return Object.assign({}, state, { [k]: v });
         });
       } else {
         const k = keys[0];
         return [].concat(
-          ...domainSpaces[k].map(v => {
+          ...domainSpace[k].map(v => {
             const newState = Object.assign({}, state, { [k]: v });
             return helper(keys.slice(1), newState);
           })
@@ -117,7 +117,7 @@ const repair = async ({
       }
     };
 
-    const space = helper(Object.keys(domainSpaces), {});
+    const space = helper(Object.keys(domainSpace), {});
     const priorSpace =
       prior.length > 0
         ? prior
@@ -147,14 +147,7 @@ const repair = async ({
     };
   };
 
-  const domainSpaces = mapValues(rangeParams => {
-    return rangeParams.length === 2
-      ? range(...rangeParams)
-      : rangeParams.length === 3
-      ? rangeStep(rangeParams[2], rangeParams[0], rangeParams[1])
-      : rangeParams;
-  }, domains);
-  const searchOutput = await search(domainSpaces, async state => {
+  const searchOutput = await search(domainSpace, async state => {
     // if inputTraces and stateTrace are Arrays, return a sum of scores
     if (Array.isArray(inputTraces)) {
       let score = 0;

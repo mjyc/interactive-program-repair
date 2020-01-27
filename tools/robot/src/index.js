@@ -3,13 +3,18 @@ import {
   createTabletFaceRobotSandboxDrivers,
   TabletFaceRobotSandbox
 } from "tabletrobotface-starter-lib";
-import { makeNeckExercise } from "interactive-program-repair/example_programs";
+import example_programs from "interactive-program-repair/example_programs";
 
 // defaults to "dev" setting
 const settings = {
   record: true,
   displayPoseViz: true,
-  hideScroll: false
+  hideScroll: false,
+  progName: "makeNeckExercise",
+  progParams: {
+    minLevel: -Number.MAX_VALUE,
+    maxLevel: Number.MAX_VALUE
+  }
 };
 try {
   Object.assign(settings, require("./settings.json"));
@@ -21,7 +26,7 @@ if (settings.hideScroll) {
 }
 
 const makeProgram = () => {
-  return makeNeckExercise();
+  return example_programs[settings.progName](settings.progParams);
 };
 
 const main = TabletFaceRobotSandbox(makeProgram, {

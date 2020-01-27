@@ -1,8 +1,5 @@
 const { promisify } = require("util");
-const {
-  makeNeckExercise,
-  deriveNeckExerciseDesiredState
-} = require("./example_programs");
+const example_programs = require("./example_programs");
 const { runProgramOffline, evaluateParams, repair } = require("./repair");
 
 const logger = require("./logger");
@@ -21,13 +18,12 @@ describe("withRecordedData", () => {
         fs.readFileSync(path)
       );
 
-      const makeProgram = makeNeckExercise;
+      console.log("settings.progName", settings.progName);
+      const makeProgram = example_programs[settings.progName];
+      const progParams = settings.progParams;
       const output = await promisify(runProgramOffline)({
         makeProgram,
-        progParams: {
-          minLevel: -Number.MAX_VALUE,
-          maxLevel: Number.MAX_VALUE
-        },
+        progParams,
         inputTraces
       });
       logger.debug("runProgramOffline", output.state);
@@ -54,17 +50,18 @@ describe("withRecordedData", () => {
         fs.readFileSync(path)
       );
 
-      const makeProgram = makeNeckExercise;
+      const makeProgram = example_programs[settings.progName];
+      const progParams = {
+        minLevel: -15,
+        maxLevel: 15
+      };
       inputTraces.askMultipleChoiceFinished = inputTraces.askMultipleChoiceFinished.filter(
         x => x.value !== "Next" && x.value !== "Go back" && x.value !== "Done"
       );
       const stateTrace = inputTraces.state;
       const output = await evaluateParams({
         makeProgram,
-        programParams: {
-          minLevel: -15,
-          maxLevel: 15
-        },
+        progParams,
         inputTraces,
         stateTrace
       });
@@ -83,16 +80,16 @@ describe("withRecordedData", () => {
         logger.warn(`No test file '${path}'`);
         return;
       }
-      const { settings, traces: inputTraces } = JSON.parse(
-        fs.readFileSync(path)
+      const { traces: inputTraces } = JSON.parse(fs.readFileSync(path));
+      const desiredStateTrace = example_programs.deriveNeckExerciseDesiredState(
+        inputTraces
       );
-      const desiredStateTrace = deriveNeckExerciseDesiredState(inputTraces);
       expect(desiredStateTrace).toEqual(inputTraces.state);
     });
   });
 
   describe("repair", () => {
-    it("finds reasonable prog params", async () => {
+    it("finds reasonable prog params that yields score > 0.8", async () => {
       const fs = require("fs");
       const path = "./testdata/recorded.json";
       if (!fs.existsSync(path)) {
@@ -103,7 +100,7 @@ describe("withRecordedData", () => {
         fs.readFileSync(path)
       );
 
-      const makeProgram = makeNeckExercise;
+      const makeProgram = example_programs[settings.progName];
       inputTraces.askMultipleChoiceFinished = inputTraces.askMultipleChoiceFinished.filter(
         x => x.value !== "Next" && x.value !== "Go back" && x.value !== "Done"
       );
@@ -113,17 +110,19 @@ describe("withRecordedData", () => {
         inputTraces,
         stateTrace,
         options: {
-          domains: {
-            minLevel: [0, -(45 + 5), -5],
-            maxLevel: [0, 45 + 5, 5]
+          domainSpace: {
+            minLevel: Array.from({ length: 19 }, (x, i) => -45 + 5 * i),
+            maxLevel: Array.from({ length: 19 }, (x, i) => -45 + 5 * i),
+            useFaceAngle: [true, false]
           }
         }
       });
       logger.debug("stateTrace", stateTrace);
       logger.debug("repair output", output);
 
-      expect(output.progParams.minLevel).toBeLessThan(-15);
-      expect(output.progParams.maxLevel).toBeGreaterThan(15);
+      // expect(output.progParams.minLevel).toBeLessThan(-15);
+      expect(output.score).toBeGreaterThan(0.8);
+      expect(1).toBe(1);
     });
   });
 });

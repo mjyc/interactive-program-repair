@@ -47,7 +47,7 @@ const discretizeTrace = (trace, interval) => {
 const computeOverlap = (trace1, trace2, { binSize = 1 } = {}) => {
   let tr1 = trace1.slice(0);
   if (trace1[trace1.length - 1].stamp < trace2[trace2.length - 1].stamp) {
-    logger.debug(`trace1[trace1.length - 1].stamp < trace2[trace2.length - 1].stamp; trace1[trace1.length - 1].stamp=${trace1[trace1.length - 1].stamp} trace2[trace2.length - 1].stamp=${trace2[trace2.length - 1].stamp}
+    logger.trace(`trace1[trace1.length - 1].stamp < trace2[trace2.length - 1].stamp; trace1[trace1.length - 1].stamp=${trace1[trace1.length - 1].stamp} trace2[trace2.length - 1].stamp=${trace2[trace2.length - 1].stamp}
       `);
     tr1 = trace1.concat({
       stamp: trace2[trace2.length - 1].stamp,
@@ -56,7 +56,7 @@ const computeOverlap = (trace1, trace2, { binSize = 1 } = {}) => {
   }
   let tr2 = trace2.slice(0);
   if (trace1[trace1.length - 1].stamp > trace2[trace2.length - 1].stamp) {
-    logger.debug(`trace1[trace1.length - 1].stamp > trace2[trace2.length - 1].stamp; trace1[trace1.length - 1].stamp=${trace1[trace1.length - 1].stamp} trace2[trace2.length - 1].stamp=${trace2[trace2.length - 1].stamp}
+    logger.trace(`trace1[trace1.length - 1].stamp > trace2[trace2.length - 1].stamp; trace1[trace1.length - 1].stamp=${trace1[trace1.length - 1].stamp} trace2[trace2.length - 1].stamp=${trace2[trace2.length - 1].stamp}
       `);
     tr2 = trace2.concat({
       stamp: trace1[trace1.length - 1].stamp,

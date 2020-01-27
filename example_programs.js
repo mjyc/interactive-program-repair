@@ -117,7 +117,9 @@ const makeNeckExercise = ({
   minLevel = -15,
   maxLevel = 15,
   activeTimeout = 0,
-  inactiveTimeout = 500
+  inactiveTimeout = 500,
+  useFaceAngle = true,
+  flipSign = false
 } = {}) => {
   const Instructor = makeInstructor({
     instructions: [
@@ -152,11 +154,16 @@ const makeNeckExercise = ({
     const poseFeatures$ = poses.map(poses =>
       poses.length === 0 ? {} : extractPoseFeatures(poses[0])
     );
-    const faceAngle$ = poseFeatures$.map(({ faceAngle }) => faceAngle);
+    const faceAngle$ = poseFeatures$.map(({ faceAngle }) =>
+      flipSign ? -faceAngle : faceAngle
+    );
+    const noseAngle$ = poseFeatures$.map(({ noseAngle }) =>
+      flipSign ? -noseAngle : noseAngle
+    );
     const state$ = makeStateDetector(
       { minLevel, maxLevel, activeTimeout, inactiveTimeout },
       { initState: 0 }
-    )({ level: faceAngle$, Time });
+    )({ level: useFaceAngle ? faceAngle$ : noseAngle$, Time });
 
     // setup Instructor
     const instructorSink = Instructor({
