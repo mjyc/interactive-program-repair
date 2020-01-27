@@ -1,5 +1,8 @@
 const { promisify } = require("util");
-const { makeNeckExercise } = require("./example_programs");
+const {
+  makeNeckExercise,
+  deriveNeckExerciseDesiredState
+} = require("./example_programs");
 const { runProgramOffline, evaluateParams, repair } = require("./repair");
 
 const logger = require("./logger");
@@ -72,9 +75,19 @@ describe("withRecordedData", () => {
     });
   });
 
-  describe("deriveDesiredState", () => {
-    it("outputs eval score > 0.5 when using reasonable prog params", async () => {
-      expect(1).toBe(1);
+  describe("deriveNeckExerciseDesiredState", () => {
+    it("desiredStateTrace === stateTrace", async () => {
+      const fs = require("fs");
+      const path = "./testdata/recorded.json";
+      if (!fs.existsSync(path)) {
+        logger.warn(`No test file '${path}'`);
+        return;
+      }
+      const { settings, traces: inputTraces } = JSON.parse(
+        fs.readFileSync(path)
+      );
+      const desiredStateTrace = deriveNeckExerciseDesiredState(inputTraces);
+      expect(desiredStateTrace).toEqual(inputTraces.state);
     });
   });
 

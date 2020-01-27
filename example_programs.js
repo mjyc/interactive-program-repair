@@ -184,9 +184,25 @@ const makeNeckExercise = ({
   };
 };
 
-const deriveNeckExerciseDesiredState = stateTrace => {
-  console.log("stateTrace", stateTrace);
-  return [];
+const deriveNeckExerciseDesiredState = ({ state }) => {
+  const desiredStateTrace = state
+    .filter((s, i, arr) => {
+      if (i === 0) {
+        return true;
+      } else {
+        // remove "prev-ed" instances
+        return parseInt(arr[i - 1].value.slice(1)) < parseInt(s.value.slice(1));
+      }
+    })
+    .filter((x, i, arr) => {
+      if (i + 1 === arr.length) {
+        return true;
+      } else {
+        // remove duplicates
+        return arr[i].value != arr[i + 1].value;
+      }
+    });
+  return desiredStateTrace;
 };
 
 module.exports = {
