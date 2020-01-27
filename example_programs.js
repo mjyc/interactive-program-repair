@@ -184,8 +184,14 @@ const makeNeckExercise = ({
   };
 };
 
+const deriveNeckExerciseDesiredState = stateTrace => {
+  console.log("stateTrace", stateTrace);
+  return [];
+};
+
 module.exports = {
   makeStateDetector,
   makeInstructor,
-  makeNeckExercise
+  makeNeckExercise,
+  deriveNeckExerciseDesiredState
 };

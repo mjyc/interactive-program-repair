@@ -4,8 +4,8 @@ const { runProgramOffline, evaluateParams, repair } = require("./repair");
 
 const logger = require("./logger");
 
-describe("runPrograms", () => {
-  describe("withRecordedData", () => {
+describe("withRecordedData", () => {
+  describe("runPrograms", () => {
     // update the note here
     it("the two runPrograms return the same 'state' output field", async () => {
       const fs = require("fs");
@@ -21,7 +21,7 @@ describe("runPrograms", () => {
       const makeProgram = makeNeckExercise;
       const output = await promisify(runProgramOffline)({
         makeProgram,
-        programParams: {
+        progParams: {
           minLevel: -Number.MAX_VALUE,
           maxLevel: Number.MAX_VALUE
         },
@@ -38,12 +38,9 @@ describe("runPrograms", () => {
       expect(output.state).toEqual(expected);
     });
   });
-});
 
-describe("evaluateParams", () => {
-  describe("withRecordedData", () => {
-    // update the note here
-    it("{todo}", async () => {
+  describe("evaluateParams", () => {
+    it("outputs eval score > 0.5 when using reasonable prog params", async () => {
       const fs = require("fs");
       const path = "./testdata/recorded.json";
       if (!fs.existsSync(path)) {
@@ -71,21 +68,18 @@ describe("evaluateParams", () => {
       logger.debug("stateTrace", stateTrace);
       logger.debug("evaluateParams output", output);
 
-      // const expected = inputTraces.state.map(x => ({
-      //   type: "next",
-      //   value: x.value,
-      //   time: x.stamp
-      // }));
-      // expect(output.state).toEqual(expected);
-      expect(1).toEqual(1);
+      expect(output.score).toBeGreaterThan(0.5);
     });
   });
-});
 
-describe("repair", () => {
-  describe("withRecordedData", () => {
-    // update the note here
-    it("{todo}", async () => {
+  describe("deriveDesiredState", () => {
+    it("outputs eval score > 0.5 when using reasonable prog params", async () => {
+      expect(1).toBe(1);
+    });
+  });
+
+  describe("repair", () => {
+    it("finds reasonable prog params", async () => {
       const fs = require("fs");
       const path = "./testdata/recorded.json";
       if (!fs.existsSync(path)) {
@@ -108,21 +102,15 @@ describe("repair", () => {
         options: {
           domains: {
             minLevel: [0, -(45 + 5), -5],
-            maxLevel: [0, 45 + 5, 5],
-            inactiveTimeout: [0, 2000, 200]
+            maxLevel: [0, 45 + 5, 5]
           }
         }
       });
       logger.debug("stateTrace", stateTrace);
       logger.debug("repair output", output);
 
-      // const expected = inputTraces.state.map(x => ({
-      //   type: "next",
-      //   value: x.value,
-      //   time: x.stamp
-      // }));
-      // expect(output.state).toEqual(expected);
-      expect(1).toEqual(1);
+      expect(output.progParams.minLevel).toBeLessThan(-15);
+      expect(output.progParams.maxLevel).toBeGreaterThan(15);
     });
   });
 });
