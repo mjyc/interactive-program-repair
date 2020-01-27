@@ -8,7 +8,7 @@ Interactive program repair in JavaScript.
 
 First, install nodejs (>= v10.16.0) and npm (>= 6.9.0). Then
 
-1. Run the neck exercise program:
+1. Run the neck exercise program (or use [Codesandbox](https://codesandbox.io/s/github/mjyc/interactive-program-repair/tree/master/tools/robot)):
   ```
   cd tools/robot;
   npm install;
