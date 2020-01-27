@@ -1,7 +1,4 @@
 const { promisify } = require("util");
-const mapValues = require("lodash/fp/mapValues");
-const range = require("lodash/fp/range");
-const rangeStep = require("lodash/fp/rangeStep");
 const xs = require("xstream").default;
 const { mockTimeSource } = require("@cycle/time");
 const { computeOverlap } = require("./utils");
