@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 const fs = require("fs");
-const example_programs = require("../../example_programs");
+const programs = require("../programs");
 const { repair } = require("../../repair.js");
 
 const { settings, traces: inputTraces } = JSON.parse(
   fs.readFileSync(process.argv[2])
 );
-const makeProgram = example_programs[settings.progName];
+const makeProgram = programs[settings.progName];
 inputTraces.askMultipleChoiceFinished = inputTraces.askMultipleChoiceFinished.filter(
   x => x.value !== "Next" && x.value !== "Go back" && x.value !== "Done"
 );

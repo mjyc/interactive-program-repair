@@ -3,7 +3,7 @@ import {
   createTabletFaceRobotSandboxDrivers,
   TabletFaceRobotSandbox
 } from "tabletrobotface-starter-lib";
-import example_programs from "interactive-program-repair/example_programs";
+import programs from "interactive-program-repair/examples/programs";
 
 // defaults to "dev" setting
 const settings = {
@@ -29,7 +29,7 @@ if (settings.hideScroll) {
 }
 
 const makeProgram = () => {
-  return example_programs[settings.progName](settings.progParams);
+  return programs[settings.progName](settings.progParams);
 };
 
 const main = TabletFaceRobotSandbox(makeProgram, {
