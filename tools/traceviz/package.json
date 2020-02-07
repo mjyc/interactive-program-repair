@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "prestart": "test -e ./src/simtracevizData.json || echo {} > ./src/simtracevizData.json",
+    "start": "npx live-server --watch=./src/simtracevizData.json,./src/simtraceviz.js,./simtraceviz.html --open=simtraceviz.html",
+    "demosim": "./node_modules/.bin/simulate voice > src/simtracevizData.json"
+  },
+  "devDependencies": {
+    "chart.js": "^2.8.0",
+    "src": "file:../../src"
+  }
+}
