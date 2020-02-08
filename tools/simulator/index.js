@@ -6,9 +6,11 @@ const {
   pipe,
   scan,
   take,
-  interval
+  interval,
+  concat
 } = require("callbag-basics");
 const pairwise = require("callbag-pairwise");
+const startWith = require("callbag-start-with");
 
 function* range(from, to) {
   let i = from;
@@ -52,7 +54,7 @@ const sample = fastpullable => slowpullable => (start, sink) => {
     if (st === 1) {
       // TODO:
       cursd = sd;
-      while (typeof curfd === "undefined" || cursd.stamp > curfd.stamp)
+      while (typeof curfd === "undefined" || cursd.stamp > curfd[1].stamp)
         ftalkback(1);
       console.log("stalkback(1); new", cursd);
       stalkback(1);
@@ -67,45 +69,61 @@ const sample = fastpullable => slowpullable => (start, sink) => {
 const countToStateLabel = x => `F${x % 2}`;
 const stateLabelToDuration = x => (x === "F0" ? 3 : 7);
 
+const createStateTraceStream = (transition, duration, initStateStamped) => {
+  const init = {
+    state: initStateStamped.state,
+    duration: duration(initStateStamped.state)
+  };
+  return concat(
+    fromIter([initStateStamped]),
+    pipe(
+      fromIter(range(0, Number.MAX_SAFE_INTEGER)),
+      scan((prev, x) => {
+        const state = transition(prev.state);
+        return {
+          state,
+          duration: duration(state)
+        };
+      }, init),
+      scan(
+        (prev, x) => ({
+          state: x.state,
+          stamp: prev.stamp + x.duration
+        }),
+        initStateStamped
+      )
+    )
+  );
+};
+
 const fast = pipe(
-  fromIter(range(0, Number.MAX_SAFE_INTEGER)),
-  map(countToStateLabel),
-  map(x => ({
-    label: x,
-    duration: stateLabelToDuration(x)
-  })),
-  scan(
-    (prev, x) => ({
-      label: x.label,
-      stamp: prev.stamp + x.duration
-    }),
-    { stamp: 0 }
+  createStateTraceStream(
+    x => (x === "F0" ? "F1" : "F0"),
+    x => (x === "F0" ? 3 : 7),
+    { state: "F0", stamp: 0 }
   ),
   take(10)
 );
 
 const slow = pipe(
-  fromIter(range(0, Number.MAX_SAFE_INTEGER)),
-  map(x => `S${x % 2}`),
-  map(x => ({
-    label: x,
-    duration: x === "S0" ? 10 : 15
-  })),
-  scan(
-    (prev, x) => ({
-      label: x.label,
-      stamp: prev.stamp + x.duration
-    }),
-    { stamp: 0 }
+  createStateTraceStream(
+    x => (x === "S0" ? "S1" : "S0"),
+    x => (x === "S0" ? 10 : 15),
+    { state: "S0", stamp: 0 }
   ),
   take(10)
 );
 
-// forEach(x => console.log(x))(fast);
-// forEach(x => console.log(x))(slow);
+forEach(x => console.log(x))(fast);
+forEach(x => console.log(x))(slow);
 
-pipe(
-  slow,
-  sample(fast),
-  forEach(console.log)
-);
+// pipe(
+//   slow,
+//   sample(
+//     pipe(
+//       fast,
+//       pairwise
+//     )
+//   ),
+//   forEach(x => console.log("out", x))
+// );

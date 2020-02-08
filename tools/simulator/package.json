@@ -3,6 +3,7 @@
   "scripts": {},
   "dependencies": {
     "callbag-basics": "3.2.0",
-    "callbag-pairwise": "^1.0.1"
+    "callbag-pairwise": "^1.0.1",
+    "callbag-start-with": "^3.1.0"
   }
 }
