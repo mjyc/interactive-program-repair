@@ -10,7 +10,6 @@ const {
   concat
 } = require("callbag-basics");
 const pairwise = require("callbag-pairwise");
-const startWith = require("callbag-start-with");
 
 function* range(from, to) {
   let i = from;
@@ -19,55 +18,6 @@ function* range(from, to) {
     i++;
   }
 }
-
-// const pred
-
-const sample = fastpullable => slowpullable => (start, sink) => {
-  if (start !== 0) return;
-  let stalkback;
-  let ftalkback;
-  let cursd;
-  let curfd;
-  slowpullable(0, (st, sd) => {
-    if (st === 0) {
-      stalkback = sd;
-      fastpullable(0, (ft, fd) => {
-        if (ft === 0) ftalkback = fd;
-        if (ft === 1) {
-          curfd = fd;
-          sink(1, { cursd, curfd });
-        }
-        if (ft === 2) {
-          stalkback(2);
-          sink(2);
-        }
-      });
-      sink(0, t => {
-        if (t === 2) {
-          stalkback(2);
-          ftalkback(2);
-        }
-      });
-      console.log("stalkback(1); first");
-      stalkback(1); // very first trigger
-    }
-    if (st === 1) {
-      // TODO:
-      cursd = sd;
-      while (typeof curfd === "undefined" || cursd.stamp > curfd[1].stamp)
-        ftalkback(1);
-      console.log("stalkback(1); new", cursd);
-      stalkback(1);
-    }
-    if (st === 2) {
-      ftalkback(2);
-      sink(2);
-    }
-  });
-};
-
-const countToStateLabel = x => `F${x % 2}`;
-const stateLabelToDuration = x => (x === "F0" ? 3 : 7);
 
 const createStateTraceStream = (transition, duration, initStateStamped) => {
   const init = {
@@ -116,14 +66,3 @@ const slow = pipe(
 
 forEach(x => console.log(x))(fast);
 forEach(x => console.log(x))(slow);
-
-// pipe(
-//   slow,
-//   sample(
-//     pipe(
-//       fast,
-//       pairwise
-//     )
-//   ),
-//   forEach(x => console.log("out", x))
-// );
