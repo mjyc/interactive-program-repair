@@ -10,6 +10,9 @@ const {
   concat
 } = require("callbag-basics");
 const pairwise = require("callbag-pairwise");
+const xs = require("xstream").default;
+const sampleCombine = require("xstream/extra/sampleCombine").default;
+const { mockTimeSource } = require("@cycle/time");
 
 function* range(from, to) {
   let i = from;
@@ -64,5 +67,58 @@ const slow = pipe(
   take(10)
 );
 
-forEach(x => console.log(x))(fast);
-forEach(x => console.log(x))(slow);
+// forEach(x => console.log(x))(fast);
+// forEach(x => console.log(x))(slow);
+
+const callbagToXs = timeSource => pullable =>
+  xs.create({
+    start(listener) {
+      let talkback;
+      let schedule;
+      let currentTime;
+      let startStamp;
+      let lastStamp;
+      pullable(0, (t, d) => {
+        if (t === 0) {
+          const op = timeSource.createOperator();
+          schedule = op.schedule;
+          currentTime = op.currentTime;
+          startStamp = currentTime();
+          lastStamp = startStamp;
+          talkback = d;
+        }
+        if (t === 1) {
+          lastStamp = startStamp + d.stamp;
+          schedule.next(listener, lastStamp, d);
+        }
+        if (t === 2)
+          typeof d === "undefined"
+            ? schedule.complete(listener, lastStamp)
+            : schedule.error(listener, lastStamp, d);
+        if (t === 0 || t === 1) talkback(1);
+      });
+    },
+    stop() {}
+  });
+
+const xsToCallbag = xstream => (start, sink) => {
+  if (start !== 0) return;
+  xstream.addListener({
+    next: x => sink(1, x),
+    error: x => sink(2, x),
+    complete: () => sink(2)
+  });
+  sink(0, t => {
+    if (t === 2) sink(2);
+  });
+};
+
+const Time = mockTimeSource();
+
+callbagToXs(Time)(fast)
+  .compose(sampleCombine(callbagToXs(Time)(slow)))
+  .addListener({
+    next: console.log
+  });
+
+Time.run();
