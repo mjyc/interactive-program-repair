@@ -5,6 +5,7 @@
     "@cycle/time": "^0.20.0",
     "callbag-basics": "^3.2.0",
     "callbag-pairwise": "^1.0.1",
+    "callbag-sample-when": "^1.0.0",
     "xstream": "^11.11.0"
   }
 }
