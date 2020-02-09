@@ -1,19 +1,15 @@
 const {
   forEach,
   fromIter,
-  map,
-  filter,
   pipe,
   scan,
   take,
-  interval,
   concat
 } = require("callbag-basics");
 const latest = require("callbag-latest");
 const pairwise = require("callbag-pairwise");
 const sampleCombine = require("callbag-sample-combine");
 const xs = require("xstream").default;
-// const sampleCombine = require("xstream/extra/sampleCombine").default;
 const { mockTimeSource } = require("@cycle/time");
 
 function* range(from, to) {
@@ -117,32 +113,6 @@ const xsToCallbag = xstream => (start, sink) => {
 
 const Time = mockTimeSource();
 
-// xsToCallbag(callbagToXs(Time)(slow));
-
-// pipe(
-//   xsToCallbag(callbagToXs(Time)(fast)),
-//   sampleWhen(xsToCallbag(callbagToXs(Time)(slow))),
-//   forEach(console.log)
-// );
-
-// callbagToXs(Time)(fast)
-//   .compose(sampleCombine(callbagToXs(Time)(slow)))
-//   .addListener({
-//     next: console.log
-//   });
-
-// forEach(console.log)(
-//   xsToCallbag(
-//     callbagToXs(Time)(fast).compose(sampleCombine(callbagToXs(Time)(slow)))
-//   )
-// );
-
-// callbagToXs(Time)(slow)
-//   .compose(sampleCombine(callbagToXs(Time)(fast)))
-//   .addListener({
-//     next: console.log
-//   });
-
 pipe(
   xsToCallbag(callbagToXs(Time)(fast)),
   sampleCombine(latest(xsToCallbag(callbagToXs(Time)(slow)))),
@@ -150,5 +120,3 @@ pipe(
 );
 
 Time.run();
-
-// stop after collecting 10 examples
