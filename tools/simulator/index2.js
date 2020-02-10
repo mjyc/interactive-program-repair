@@ -23,128 +23,158 @@ function* range(from, to) {
   }
 }
 
-const createStateTraceStream = (transition, duration, initStateStamped) => {
-  const init = {
-    state: initStateStamped.state,
-    duration: duration(initStateStamped.state)
+const fsm = (transition, initState) => (start, sink) => {
+  if (start !== 0) return;
+  let state = initState;
+  let id = null;
+  const stop = () => {
+    console.log("stop");
+    clearInterval(id);
+    id = null;
+    state = initState;
   };
-  return concat(
-    fromIter([initStateStamped]),
-    pipe(
-      fromIter(range(0, Number.MAX_SAFE_INTEGER)),
-      scan((prev, x) => {
-        const state = transition(prev.state);
-        return {
-          state,
-          duration: duration(state)
-        };
-      }, init),
-      scan(
-        (prev, x) => ({
-          state: x.state,
-          stamp: prev.stamp + x.duration
-        }),
-        initStateStamped
-      )
-    )
-  );
+  const play = () => {
+    console.log("play");
+    // sink(1, Object.assign(state, { init: true }));
+    id = setInterval(() => {
+      state = transition(state);
+      sink(1, state);
+    }, 0);
+  };
+  sink(0, t => {
+    if (t === 1) {
+      if (id) stop();
+      else play();
+    }
+    if (t === 2) clearInterval(id);
+  });
 };
 
-const fast = pipe(
-  createStateTraceStream(
-    x => (x === "F0" ? "F1" : "F0"),
-    // x => (x === "F0" ? 3 : 7),
-    x => 1,
-    { state: "F0", stamp: 0 }
-  ),
-  take(100000)
-);
+// pipe(
+//   interval(5),
+//   sample(fsm(s => (s === "S1" ? "S2" : "S1"), "S1")),
+//   take(100),
+//   forEach(x => console.log(x))
+// );
 
-// forEach(x => console.log(x))(fast);
-
-const pausableInterval = pullable => (start, sink) => {
+const hfsm = (fsms, transition, initState) => (start, sink) => {
   if (start !== 0) return;
-  let ptalkback;
-  let pulling = false;
-  pullable(0, (pt, pd) => {
-    if (pt === 0) {
-      ptalkback = pd;
-    }
-    if (pt === 1) {
-      if (pulling) {
-        setTimeout(() => {
-          sink(1, pd);
-          ptalkback(1);
-        }, 0);
-      } else {
-        console.error("whaaat?", pt, pd);
-      }
-    }
-    sink(0, t => {
-      if (t === 1) {
-        console.log("pulling", pulling);
-        if (pulling) pulling = false;
-        else {
-          pulling = true;
-          ptalkback(1);
+
+  let state = initState;
+
+  let talkbacks = [];
+  sink(0, t => {
+    if (t === 2) talkbacks.map(talkback => talkback(2));
+  });
+  fsms.map((fsm, i) => {
+    fsm(0, (t, d) => {
+      if (t === 0) {
+        talkbacks[i] = d;
+        console.log(
+          "i, talkbacks.length, fsms.length",
+          i,
+          talkbacks.length,
+          fsms.length
+        );
+        if (talkbacks.length === fsms.length) {
+          // sink(1, state);
+          talkbacks[state.i](1);
         }
       }
-      if (t === 2) ptalkback(2);
+      if (t === 1) {
+        console.log("state", state);
+        sink(1, state);
+        state.c = d;
+        const previ = state.i;
+        state = transition(state);
+        if (state.i !== previ) {
+          talkbacks[previ](1);
+          talkbacks[state.i](1);
+        }
+      }
+      if (t === 2) sink(2);
     });
   });
 };
 
-const sample2 = pullable => listenable => (start, sink) => {
-  if (start !== 0) return;
-  let ltalkback;
-  let ptalkback;
-  listenable(0, (lt, ld) => {
-    if (lt === 0) {
-      ltalkback = ld;
-      pullable(0, (pt, pd) => {
-        if (pt === 0) ptalkback = pd;
-        if (pt === 1) sink(1, pd);
-        if (pt === 2) {
-          ltalkback(2);
-          sink(2);
-        }
-      });
-      sink(0, t => {
-        if (t === 2) {
-          ltalkback(2);
-          ptalkback(2);
-        }
-      });
-    }
-    if (lt === 1) ptalkback(1);
-    if (lt === 2) {
-      ptalkback(2);
-      sink(2);
-    }
-  });
-};
+const a = fsm(s => (s === "S1" ? "S2" : s === "S2" ? "S3" : "S1"), "S1");
+const b = fsm(s => (s === "F1" ? "F2" : "F1"), "F1");
 
-// const hfsm = transition => sfsm => (start, sink) => {
+pipe(
+  hfsm(
+    [a, b],
+    s => {
+      if (s.p === "H1" && s.c === "S3") return { p: "H2", c: "F1", i: 1 };
+      if (s.p === "H2" && s.c === "F2") return { p: "H1", c: "S1", i: 0 };
+      else return s;
+    },
+    { p: "H2", c: "S1", i: 0 }
+  ),
+  take(50),
+  forEach(x => console.log(x))
+);
+
+// const createStateTraceStream = (transition, duration, initStateStamped) => {
+//   const init = {
+//     state: initStateStamped.state,
+//     duration: duration(initStateStamped.state)
+//   };
+//   return concat(
+//     fromIter([initStateStamped]),
+//     pipe(
+//       fromIter(range(0, Number.MAX_SAFE_INTEGER)),
+//       scan((prev, x) => {
+//         const state = transition(prev.state);
+//         return {
+//           state,
+//           duration: duration(state)
+//         };
+//       }, init),
+//       scan(
+//         (prev, x) => ({
+//           state: x.state,
+//           stamp: prev.stamp + x.duration
+//         }),
+//         initStateStamped
+//       )
+//     )
+//   );
+// };
+
+// const fast = pipe(
+//   createStateTraceStream(
+//     x => (x === "F0" ? "F1" : "F0"),
+//     // x => (x === "F0" ? 3 : 7),
+//     x => 1,
+//     { state: "F0", stamp: 0 }
+//   ),
+//   take(1000)
+// );
+
+// forEach(x => console.log(x))(fast);
+
+// const hfsm = (sfsm1, transition, init) => sfsm => (start, sink) => {
 //   if (start !== 0) return;
 //   let talkback;
-//   sfsm(0, (t, p) => {
-//     if (t === 0) talkback = p;
+//   sfsm(0, (t, d) => {
+//     if (t === 0) talkback = d;
 //     if (t === 1) {
-//       sink(1, p); // p is "state"
-//       // if
+//       sink(1, transition(d));
+//       //
 //     }
-//     if (t === 2) {
-//       sink(2);
-//     }
+//     if (t === 2) sink(2);
 //   });
 //   sink(0, t => {
+//     // start when sink registers
 //     if (t === 1) talkback(1);
 //     if (t === 2) talkback(2);
 //   });
 // };
 
 // pipe(
-//   interval(10),
-//   sample2(pausableInterval(fast)),
+//   fast,
+//   hfsm(i => {
+//     return i.stamp < 100 ? "SS1" : "SS2";
+//   }),
 //   forEach(x => console.log(x))
 // );
