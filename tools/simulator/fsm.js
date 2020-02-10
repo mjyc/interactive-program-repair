@@ -34,7 +34,42 @@ const subscribe = ({ next, complete }) => fsm => {
   });
 };
 
+// TODO: update to make it behave like run
+const hrun = (fsms, transition, initState) => (start, sink) => {
+  if (start !== 0) return;
+  let state = initState;
+  let talkbacks = [];
+  sink(0, t => {
+    if (t === 2) {
+      talkbacks.map(talkback => talkback(2));
+      talkbacks = [];
+    }
+  });
+  fsms.map((fsm, i) => {
+    fsm(0, (t, d) => {
+      if (t === 0) {
+        talkbacks[i] = d;
+        if (talkbacks.length === fsms.length) {
+          if (typeof state.start !== "undefined") talkbacks[state.start](1);
+          if (typeof state.stop !== "undefined") talkbacks[state.stop](2);
+        }
+      }
+      if (t === 1) {
+        const curState = { p: state.p, c: d };
+        sink(1, curState);
+        state = transition(curState);
+        if (talkbacks.length === fsms.length) {
+          if (typeof state.stop !== "undefined") talkbacks[state.stop](2);
+          if (typeof state.start !== "undefined") talkbacks[state.start](1);
+        }
+      }
+      // t === 2 does not happen for fsms
+    });
+  });
+};
+
 module.exports = {
   run,
-  subscribe
+  subscribe,
+  hrun
 };
