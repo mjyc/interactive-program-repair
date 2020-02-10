@@ -11,6 +11,7 @@ const pairwise = require("callbag-pairwise");
 const sampleCombine = require("callbag-sample-combine");
 const xs = require("xstream").default;
 const { mockTimeSource } = require("@cycle/time");
+const random = require("random");
 
 function* range(from, to) {
   let i = from;
@@ -46,27 +47,6 @@ const createStateTraceStream = (transition, duration, initStateStamped) => {
     )
   );
 };
-
-const fast = pipe(
-  createStateTraceStream(
-    x => (x === "F0" ? "F1" : "F0"),
-    x => (x === "F0" ? 3 : 7),
-    { state: "F0", stamp: 0 }
-  ),
-  take(10)
-);
-
-const slow = pipe(
-  createStateTraceStream(
-    x => (x === "S0" ? "S1" : "S0"),
-    x => (x === "S0" ? 10 : 15),
-    { state: "S0", stamp: 0 }
-  ),
-  take(10)
-);
-
-// forEach(x => console.log(x))(fast);
-// forEach(x => console.log(x))(slow);
 
 const callbagToXs = timeSource => pullable =>
   xs.create({
@@ -111,6 +91,37 @@ const xsToCallbag = xstream => (start, sink) => {
   });
 };
 
+const fast = pipe(
+  createStateTraceStream(
+    x => (x === "F0" ? "F1" : "F0"),
+    x => (x === "F0" ? 3 : 7),
+    { state: "F0", stamp: 0 }
+  ),
+  take(10)
+);
+
+const slow = pipe(
+  createStateTraceStream(
+    x => (x === "S0" ? "S1" : "S0"),
+    x => (x === "S0" ? 10 : 15),
+    { state: "S0", stamp: 0 }
+  ),
+  take(10)
+);
+
+// const tick = pipe(
+//   createStateTraceStream(
+//     x => i,
+//     x => 10.0,
+//     { state: 0, stamp: 0 }
+//   )
+// );
+
+// console.log(random);
+
+// forEach(x => console.log(x))(fast);
+// forEach(x => console.log(x))(slow);
+
 const Time = mockTimeSource();
 
 pipe(
@@ -120,3 +131,6 @@ pipe(
 );
 
 Time.run();
+
+// TODOs
+// 1.
