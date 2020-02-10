@@ -1,6 +1,8 @@
 {
   "private": "true",
-  "scripts": {},
+  "scripts": {
+    "test": "npx jest"
+  },
   "dependencies": {
     "@cycle/time": "0.20.0",
     "callbag-basics": "3.2.0",

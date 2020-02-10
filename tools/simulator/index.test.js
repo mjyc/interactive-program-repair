@@ -1,99 +1,39 @@
-describe("test1", () => {
-  test("#0", () => {
-    expect(1).toBe(1);
+const { forEach, interval, pipe, take } = require("callbag-basics");
+const sample = require("callbag-sample");
+const { fsm } = require("./index");
+
+describe("fsm", () => {
+  test("#0", done => {
+    const actual = [];
+    pipe(
+      fsm(s => (s === "S1" ? "S2" : s === "S2" ? "S3" : "S1"), "S1"),
+      take(10),
+      fsm => {
+        let talkback;
+        fsm(0, (t, d) => {
+          if (t === 0) talkback = d;
+          if (t === 1) {
+            actual.push(d);
+          }
+          if (t === 2) {
+            const expected = [
+              "S1",
+              "S2",
+              "S3",
+              "S1",
+              "S2",
+              "S3",
+              "S1",
+              "S2",
+              "S3",
+              "S1"
+            ];
+            expect(actual).toEqual(expected);
+            done();
+          }
+          if (t === 0) talkback(1);
+        });
+      }
+    );
   });
 });
-
-// const { simulateStateTrace } = require("./index");
-
-// describe("simulateStateTrace", () => {
-//   describe("level1", () => {
-//     test("#0", () => {
-//       const trace = simulateStateTrace({
-//         initState: "a",
-//         initStamp: 0,
-//         getStateTrace: (state, stamp) => {
-//           const next = {
-//             a: "b",
-//             b: "a"
-//           };
-//           const dur = {
-//             a: stamp + 10,
-//             b: stamp + 20
-//           };
-//           return [
-//             {
-//               stamp: dur[state],
-//               value: next[state]
-//             }
-//           ];
-//         },
-//         stop: (_, stamp) => stamp > 30
-//       });
-//       expect(trace).toEqual([
-//         { stamp: 0, value: "a" },
-//         { stamp: 10, value: "b" },
-//         { stamp: 30, value: "a" },
-//         { stamp: 40, value: "b" }
-//       ]);
-//     });
-
-//     test("#1", () => {
-//       const trace = simulateStateTrace({
-//         initState: "a",
-//         initStamp: 0,
-//         getStateTrace: (state, stamp) => {
-//           const next = {
-//             a: "b",
-//             b: "a"
-//           };
-//           const dur = {
-//             a: stamp + 10,
-//             b: stamp + 20
-//           };
-//           return [
-//             {
-//               stamp: dur[state],
-//               value: next[state]
-//             }
-//           ];
-//         },
-//         stop: (_, stamp) => stamp >= 30
-//       });
-//       expect(trace).toEqual([
-//         { stamp: 0, value: "a" },
-//         { stamp: 10, value: "b" },
-//         { stamp: 30, value: "a" }
-//       ]);
-//     });
-
-//     test("#2", () => {
-//       const trace = simulateStateTrace({
-//         initState: "a",
-//         initStamp: 0,
-//         getStateTrace: (state, stamp) => {
-//           const next = {
-//             a: "b",
-//             b: "a"
-//           };
-//           const dur = {
-//             a: stamp + 11,
-//             b: stamp + 22
-//           };
-//           return [
-//             {
-//               stamp: dur[state],
-//               value: next[state]
-//             }
-//           ];
-//         },
-//         stop: (_, stamp) => stamp >= 30
-//       });
-//       expect(trace).toEqual([
-//         { stamp: 0, value: "a" },
-//         { stamp: 11, value: "b" },
-//         { stamp: 33, value: "a" }
-//       ]);
-//     });
-//   });
-// });
