@@ -27,76 +27,71 @@ const fsm = (transition, initState) => (start, sink) => {
   if (start !== 0) return;
   let state = initState;
   let id = null;
+
   const stop = () => {
-    console.log("stop");
+    // console.log("initState", initState);
     clearInterval(id);
     id = null;
     state = initState;
   };
   const play = () => {
-    console.log("play");
-    // sink(1, Object.assign(state, { init: true }));
+    sink(1, state);
     id = setInterval(() => {
       state = transition(state);
       sink(1, state);
     }, 0);
   };
   sink(0, t => {
+    // console.log("t", t, state);
     if (t === 1) {
       if (id) stop();
       else play();
     }
-    if (t === 2) clearInterval(id);
+    if (t === 2) stop();
   });
 };
 
 // pipe(
-//   interval(5),
+//   interval(100),
 //   sample(fsm(s => (s === "S1" ? "S2" : "S1"), "S1")),
-//   take(100),
+//   take(10),
 //   forEach(x => console.log(x))
 // );
 
 const hfsm = (fsms, transition, initState) => (start, sink) => {
   if (start !== 0) return;
-
   let state = initState;
-
   let talkbacks = [];
   sink(0, t => {
-    if (t === 2) talkbacks.map(talkback => talkback(2));
+    if (t === 2) {
+      talkbacks.map(talkback => talkback(2));
+      talkbacks = [];
+    }
   });
   fsms.map((fsm, i) => {
     fsm(0, (t, d) => {
       if (t === 0) {
         talkbacks[i] = d;
-        console.log(
-          "i, talkbacks.length, fsms.length",
-          i,
-          talkbacks.length,
-          fsms.length
-        );
         if (talkbacks.length === fsms.length) {
-          // sink(1, state);
-          talkbacks[state.i](1);
+          if (typeof state.start !== "undefined") talkbacks[state.start](1);
+          if (typeof state.stop !== "undefined") talkbacks[state.stop](2);
         }
       }
       if (t === 1) {
-        console.log("state", state);
-        sink(1, state);
-        state.c = d;
-        const previ = state.i;
-        state = transition(state);
-        if (state.i !== previ) {
-          talkbacks[previ](1);
-          talkbacks[state.i](1);
+        const curState = Object.assign({}, state, { c: d });
+        sink(1, curState);
+        state = transition(curState);
+        if (talkbacks.length === fsms.length) {
+          if (typeof state.stop !== "undefined") talkbacks[state.stop](2);
+          if (typeof state.start !== "undefined") talkbacks[state.start](1);
         }
       }
-      if (t === 2) sink(2);
+      // t === 2 does not happen for fsms
     });
   });
 };
 
+// sub fsms
 const a = fsm(s => (s === "S1" ? "S2" : s === "S2" ? "S3" : "S1"), "S1");
 const b = fsm(s => (s === "F1" ? "F2" : "F1"), "F1");
 
@@ -104,13 +99,19 @@ pipe(
   hfsm(
     [a, b],
     s => {
-      if (s.p === "H1" && s.c === "S3") return { p: "H2", c: "F1", i: 1 };
-      if (s.p === "H2" && s.c === "F2") return { p: "H1", c: "S1", i: 0 };
-      else return s;
+      if (s.p === "H1" && s.c === "S3")
+        return { p: "H2", c: "F1", start: 1, stop: 0 };
+      if (s.p === "H2" && s.c === "F2")
+        return { p: "H1", c: "S1", start: 0, stop: 1 };
+      else
+        return {
+          p: s.p,
+          c: s.c
+        };
     },
-    { p: "H2", c: "S1", i: 0 }
+    { p: "H1", c: "S1", start: 0 }
   ),
-  take(50),
+  take(20),
   forEach(x => console.log(x))
 );
 
