@@ -1,4 +1,4 @@
-const { forEach, pipe, take } = require("callbag-basics");
+const { pipe, take } = require("callbag-basics");
 const { run, subscribe, hrun } = require("./fsm");
 
 describe("run", () => {

@@ -1,7 +1,8 @@
 {
   "private": "true",
   "scripts": {
-    "test": "npx jest"
+    "test": "npx jest",
+    "demo": "node demo.js"
   },
   "dependencies": {
     "@cycle/time": "0.20.0",
