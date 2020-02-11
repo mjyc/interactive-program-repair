@@ -30,3 +30,7 @@ First, install nodejs (>= v10.16.0) and npm (>= 6.9.0). Then
   node main.js downloaded_fileprefix/traces_{date}.json
   ```
   The output shows repaired program parameters.
+
+### (WIP) Building Human Simulator for Testing
+
+Work-in-progress demo and examples are available at [`./pkgs/callbag-fsm`](./pkgs/callbag-fsm).
