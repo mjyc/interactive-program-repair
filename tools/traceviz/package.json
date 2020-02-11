@@ -1,12 +1,11 @@
 {
   "private": true,
   "scripts": {
-    "prestart": "test -e ./src/simtracevizData.json || echo {} > ./src/simtracevizData.json",
-    "start": "npx live-server --watch=./src/simtracevizData.json,./src/simtraceviz.js,./simtraceviz.html --open=simtraceviz.html",
-    "demosim": "./node_modules/.bin/simulate voice > src/simtracevizData.json"
+    "prestart": "test -e ./src/data.json || echo {} > ./src/data.json",
+    "start": "npx live-server --watch=./src/data.json,./src/index.js,./index.html --open=index.html",
+    "demosim": "./node_modules/.bin/simulate voice > src/data.json"
   },
   "devDependencies": {
-    "chart.js": "^2.8.0",
-    "src": "file:../../src"
+    "chart.js": "^2.8.0"
   }
 }

@@ -122,7 +122,7 @@ const visualize = simTraces => {
     });
 };
 
-fetch("/src/simtracevizData.json")
+fetch("/src/data.json")
   .then(response => {
     return response.json();
   })
