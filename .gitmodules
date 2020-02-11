@@ -1,3 +1,6 @@
 [submodule "pkgs/tabletrobotface-starter-lib"]
 	path = pkgs/tabletrobotface-starter-lib
 	url = git@gitlab.com:mjyc/tabletrobotface-starter-lib.git
+[submodule "pkgs/callbag-fsm"]
+	path = pkgs/callbag-fsm
+	url = git@gitlab.com:mjyc/callbag-fsm.git
