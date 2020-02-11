@@ -1,4 +1,4 @@
-const { forEach, fromIter, pipe, take } = require("callbag-basics");
+const { forEach, fromIter, map, pipe, take } = require("callbag-basics");
 const xs = require("xstream").default;
 const { mockTimeSource } = require("@cycle/time");
 const { run, subscribe, hrun, callbagToXs, xsToCallbag } = require("./index");
@@ -42,33 +42,31 @@ describe("hrun", () => {
           run(s => (s === "F1" ? "F2" : "F1"), "F1")
         ],
         s => {
-          if (s.p === "H1" && s.c === "S3")
-            return { p: "H2", c: "F1", start: 1, stop: 0 };
-          if (s.p === "H2" && s.c === "F2")
-            return { p: "H1", c: "S1", start: 0, stop: 1 };
+          if (s.parent === "H1" && s.child === "S3")
+            return { parent: "H2", child: "F1", start: 1, stop: 0 };
+          if (s.parent === "H2" && s.child === "F2")
+            return { parent: "H1", child: "S1", start: 0, stop: 1 };
           else
-            return {
-              p: s.p,
-              c: s.c
-            };
+            return Object.assign({}, s, { start: undefined, stop: undefined });
         },
-        { p: "H1", c: "S1", start: 0 }
+        { parent: "H1", child: "S1", start: 0 }
       ),
+      map(x => ({ parent: x.parent, child: x.child })),
       take(10),
       subscribe({
         next: d => actual.push(d),
         complete: () => {
           const expected = [
-            { p: "H1", c: "S1" },
-            { p: "H1", c: "S2" },
-            { p: "H1", c: "S3" },
-            { p: "H2", c: "F1" },
-            { p: "H2", c: "F2" },
-            { p: "H1", c: "S1" },
-            { p: "H1", c: "S2" },
-            { p: "H1", c: "S3" },
-            { p: "H2", c: "F1" },
-            { p: "H2", c: "F2" }
+            { parent: "H1", child: "S1" },
+            { parent: "H1", child: "S2" },
+            { parent: "H1", child: "S3" },
+            { parent: "H2", child: "F1" },
+            { parent: "H2", child: "F2" },
+            { parent: "H1", child: "S1" },
+            { parent: "H1", child: "S2" },
+            { parent: "H1", child: "S3" },
+            { parent: "H2", child: "F1" },
+            { parent: "H2", child: "F2" }
           ];
           expect(actual).toEqual(expected);
           done();
