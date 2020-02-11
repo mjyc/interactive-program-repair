@@ -1,3 +1,5 @@
+const xs = require("xstream").default;
+
 const run = (transition, initState) => (start, sink) => {
   if (start !== 0) return;
   let state = null;
@@ -68,8 +70,53 @@ const hrun = (fsms, transition, initState) => (start, sink) => {
   });
 };
 
+const callbagToXs = timeSource => pullable =>
+  xs.create({
+    start(listener) {
+      let talkback;
+      let schedule;
+      let currentTime;
+      let startStamp;
+      let lastStamp;
+      pullable(0, (t, d) => {
+        if (t === 0) {
+          const op = timeSource.createOperator();
+          schedule = op.schedule;
+          currentTime = op.currentTime;
+          startStamp = currentTime();
+          lastStamp = startStamp;
+          talkback = d;
+        }
+        if (t === 1) {
+          lastStamp = startStamp + d.stamp;
+          schedule.next(listener, lastStamp, d);
+        }
+        if (t === 2)
+          typeof d === "undefined"
+            ? schedule.complete(listener, lastStamp)
+            : schedule.error(listener, lastStamp, d);
+        if (t === 0 || t === 1) talkback(1);
+      });
+    },
+    stop() {}
+  });
+
+const xsToCallbag = xstream => (start, sink) => {
+  if (start !== 0) return;
+  const subs = xstream.subscribe({
+    next: x => sink(1, x),
+    error: x => sink(2, x),
+    complete: () => sink(2)
+  });
+  sink(0, t => {
+    if (t === 2) subs.unsubscribe();
+  });
+};
+
 module.exports = {
   run,
   subscribe,
-  hrun
+  hrun,
+  callbagToXs,
+  xsToCallbag
 };
