@@ -7,8 +7,6 @@
   "dependencies": {
     "@cycle/time": "0.20.0",
     "callbag-basics": "3.2.0",
-    "callbag-latest": "1.1.0",
-    "callbag-pairwise": "1.0.1",
     "callbag-sample": "2.0.0",
     "callbag-sample-combine": "1.1.0",
     "random": "2.1.1",
