@@ -1,71 +1,81 @@
 const { forEach, pipe, take } = require("callbag-basics");
-const { run, subscribe, hrun } = require("./fsm");
+const random = require("random");
+const { run, subscribe, hrun } = require("./index");
 
-// const headLeftFSM = run(s => {
-//   if (s === "HL_LEFT") return "HL_CENTER";
-//   if (s === "HL_CENTER") return "HL_LEFT";
-//   return s;
-// }, "HL_LEFT");
-// const headCenterFSM = run(s => {
-//   if (s === "HL_LEFT") return "HL_CENTER";
-//   if (s === "HL_CENTER") return "HL_LEFT";
-//   return s;
-// }, "HL_LEFT");
-// const headRightFSM = run(s => {
-//   if (s === "HL_LEFT") return "HL_CENTER";
-//   if (s === "HL_CENTER") return "HL_LEFT";
-//   return s;
-// }, "HL_LEFT");
+const runTiltedCenter = run(
+  s => {
+    if (s.label === "center")
+      return {
+        label: "left", // or "right"
+        stamp: s.stamp + 5 // duration of "center" higher than 0ms (activeTimeout)
+      };
+    if (s.label === "left")
+      return {
+        label: "center",
+        stamp: s.stamp + 3 // duration of "left" lower than 500ms (inactiveTimeout)
+      };
+    return s;
+  },
+  {
+    label: "center",
+    stamp: 0
+  }
+);
 
-// const neckExerciseFSM = run(s => {
-//   if (s.p === "H1" && s.c === "S3")
-//     return { p: "H2", c: "F1", start: 1, stop: 0 };
-//   if (s.p === "H2" && s.c === "F2")
-//     return { p: "H1", c: "S1", start: 0, stop: 1 };
-//   else
-//     return {
-//       p: s.p,
-//       c: s.c
-//     };
-// }, {
-//   p: "center",
-//   c: "..."
-// });
+const runTiltedLeft = run(
+  s => {
+    if (s.label === "left")
+      return {
+        label: "center",
+        stamp: s.stamp + 5 // higher than 500ms
+      };
+    return s;
+  },
+  {
+    label: "left",
+    stamp: 0
+  }
+);
 
-// pipe(
-//   hrun(
-//     [, run(s => (s === "F1" ? "F2" : "F1"), "F1")],
-//     s => {
-//       if (s.p === "H1" && s.c === "S3")
-//         return { p: "H2", c: "F1", start: 1, stop: 0 };
-//       if (s.p === "H2" && s.c === "F2")
-//         return { p: "H1", c: "S1", start: 0, stop: 1 };
-//       else
-//         return {
-//           p: s.p,
-//           c: s.c
-//         };
-//     },
-//     { p: "H1", c: "S1", start: 0 }
-//   ),
-//   take(10),
-//   subscribe({
-//     next: d => actual.push(d),
-//     complete: () => {
-//       const expected = [
-//         { p: "H1", c: "S1" },
-//         { p: "H1", c: "S2" },
-//         { p: "H1", c: "S3" },
-//         { p: "H2", c: "F1" },
-//         { p: "H2", c: "F2" },
-//         { p: "H1", c: "S1" },
-//         { p: "H1", c: "S2" },
-//         { p: "H1", c: "S3" },
-//         { p: "H2", c: "F1" },
-//         { p: "H2", c: "F2" }
-//       ];
-//       expect(actual).toEqual(expected);
-//       done();
-//     }
-//   })
-// );
+const neckExerciseFSM = hrun(
+  [runTiltedCenter, runTiltedLeft],
+  s => {
+    if (s.label === "hcenter" && s.child.label === "left" && s.child.stamp > 20)
+      return {
+        label: "hleft",
+        child: { label: "left", stamp: 0 },
+        stamp: s.stamp + s.child.stamp,
+        start: 1,
+        stop: 0
+      };
+    if (s.label === "hleft" && s.child.label === "center")
+      return {
+        label: "hcenter",
+        child: { label: "center", stamp: 0 },
+        stamp: s.stamp + s.child.stamp,
+        start: 0,
+        stop: 1
+      };
+    else return Object.assign({}, s, { start: undefined, stop: undefined });
+  },
+  {
+    label: "hcenter",
+    child: { label: "center", stamp: 0 },
+    stamp: 0,
+    start: 0
+  }
+);
+
+pipe(
+  neckExerciseFSM,
+  // runTiltedCenter,
+  take(20),
+  subscribe({
+    next: d => {
+      delete d.start;
+      delete d.stop;
+      console.log(d);
+    },
+    complete: () => {}
+  })
+);

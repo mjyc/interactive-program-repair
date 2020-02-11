@@ -55,8 +55,8 @@ const hrun = (fsms, transition, initState) => (start, sink) => {
         }
       }
       if (t === 1) {
-        const curState = { p: state.p, c: d };
-        sink(1, curState);
+        const curState = Object.assign({}, state, { child: d });
+        if (curState.stop !== i) sink(1, curState);
         state = transition(curState);
         if (talkbacks.length === fsms.length) {
           if (typeof state.stop !== "undefined") talkbacks[state.stop](2);
