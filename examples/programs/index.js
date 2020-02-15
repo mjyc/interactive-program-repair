@@ -147,19 +147,32 @@ const makeNeckExercise = ({
     }
   });
 
-  return ({ tabletfaceLoaded, poses, askMultipleChoiceFinished, Time }) => {
+  return ({
+    tabletfaceLoaded = xs.of(true),
+    poses = xs.of([]),
+    faceAngle,
+    noseAngle,
+    askMultipleChoiceFinished,
+    Time
+  } = {}) => {
     const ready$ = xs.combine(tabletfaceLoaded, poses.take(1));
 
     // setup StateDetector
     const poseFeatures$ = poses.map(poses =>
       poses.length === 0 ? {} : extractPoseFeatures(poses[0])
     );
-    const faceAngle$ = poseFeatures$.map(({ faceAngle }) =>
-      flipSign ? -faceAngle : faceAngle
-    );
-    const noseAngle$ = poseFeatures$.map(({ noseAngle }) =>
-      flipSign ? -noseAngle : noseAngle
-    );
+    const faceAngle$ =
+      typeof faceAngle !== "undefined"
+        ? faceAngle
+        : poseFeatures$.map(({ faceAngle }) =>
+            flipSign ? -faceAngle : faceAngle
+          );
+    const noseAngle$ =
+      typeof noseAngle !== "undefined"
+        ? noseAngle
+        : poseFeatures$.map(({ noseAngle }) =>
+            flipSign ? -noseAngle : noseAngle
+          );
     const state$ = makeStateDetector(
       { minLevel, maxLevel, activeTimeout, inactiveTimeout },
       { initState: 0 }

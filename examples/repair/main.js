@@ -18,8 +18,8 @@ repair({
   stateTrace,
   options: {
     domainSpace: {
-      minLevel: Array.from({ length: 19 }, (x, i) => -45 + 5 * i),
-      maxLevel: Array.from({ length: 19 }, (x, i) => -45 + 5 * i),
+      minLevel: Array.from({ length: 9 }, (x, i) => -45 + 5 * i),
+      maxLevel: Array.from({ length: 9 }, (x, i) => -45 + 5 * i),
       inactiveTimeout: Array.from({ length: 11 }, (x, i) => 200 * i),
       useFaceAngle: [true, false],
       flipSign: [true, false]
