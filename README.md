@@ -31,6 +31,15 @@ First, install nodejs (>= v10.16.0) and npm (>= 6.9.0). Then
   ```
   The output shows repaired program parameters.
 
-### (WIP) Building Human Simulator for Testing
+### Testing Repair via a Human Simulator
 
-Work-in-progress demo and examples are available at [`./pkgs/callbag-fsm`](./pkgs/callbag-fsm).
+Run
+
+```
+cd pkgs/callbag-fsm && npm install; # install dependencies
+node demo4repair.js > path_to_simulated_human_inputs; # generate simulated data
+cd ../../;
+node examples/repair/main path_to_simulated_human_inputs # run repair with the generated data
+```
+
+See [`./pkgs/callbag-fsm/demo4repair.js`](./pkgs/callbag-fsm/demo4repair.js) for a human simulator implementation; details are available at [`./pkgs/callbag-fsm`](./pkgs/callbag-fsm).
