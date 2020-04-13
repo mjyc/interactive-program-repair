@@ -9,7 +9,7 @@
   },
   "author": "Michael Jae-Yoon Chung",
   "license": "MIT",
-  "repository": "https://gitlab.com/mjyc/interactive-program-repair",
+  "repository": "https://github.com/mjyc/interactive-program-repair",
   "dependencies": {
     "@cycle/time": "0.19.0",
     "xstream": "11.11.0"
