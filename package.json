@@ -2,7 +2,7 @@
   "name": "interactive-program-repair",
   "version": "0.0.6",
   "description": "Interactive program repair in JavaScript",
-  "main": "index.js",
+  "main": "repair.js",
   "scripts": {
     "postinstall": "cd pkgs/tabletrobotface-starter-lib && npm install && npm run build && cd ../callbag-fsm && npm install",
     "test": "npx jest"

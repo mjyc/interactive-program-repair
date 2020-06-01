@@ -1,5 +1,5 @@
 const { promisify } = require("util");
-const example_programs = require("./example_programs");
+const example_programs = require("./examples/programs");
 const { runProgramOffline, evaluateParams, repair } = require("./repair");
 
 const logger = require("./logger");
@@ -24,15 +24,15 @@ describe("withRecordedData", () => {
       const output = await promisify(runProgramOffline)({
         makeProgram,
         progParams,
-        inputTraces
+        inputTraces,
       });
       logger.debug("runProgramOffline", output.state);
       logger.debug("recorded state trace", inputTraces.state);
 
-      const expected = inputTraces.state.map(x => ({
+      const expected = inputTraces.state.map((x) => ({
         type: "next",
         value: x.value,
-        time: x.stamp
+        time: x.stamp,
       }));
       expect(output.state).toEqual(expected);
     });
@@ -53,17 +53,17 @@ describe("withRecordedData", () => {
       const makeProgram = example_programs[settings.progName];
       const progParams = {
         minLevel: -15,
-        maxLevel: 15
+        maxLevel: 15,
       };
       inputTraces.askMultipleChoiceFinished = inputTraces.askMultipleChoiceFinished.filter(
-        x => x.value !== "Next" && x.value !== "Go back" && x.value !== "Done"
+        (x) => x.value !== "Next" && x.value !== "Go back" && x.value !== "Done"
       );
       const stateTrace = inputTraces.state;
       const output = await evaluateParams({
         makeProgram,
         progParams,
         inputTraces,
-        stateTrace
+        stateTrace,
       });
       logger.debug("stateTrace", stateTrace);
       logger.debug("evaluateParams output", output);
@@ -102,7 +102,7 @@ describe("withRecordedData", () => {
 
       const makeProgram = example_programs[settings.progName];
       inputTraces.askMultipleChoiceFinished = inputTraces.askMultipleChoiceFinished.filter(
-        x => x.value !== "Next" && x.value !== "Go back" && x.value !== "Done"
+        (x) => x.value !== "Next" && x.value !== "Go back" && x.value !== "Done"
       );
       const stateTrace = inputTraces.state;
       const output = await repair({
@@ -113,9 +113,9 @@ describe("withRecordedData", () => {
           domainSpace: {
             minLevel: Array.from({ length: 19 }, (x, i) => -45 + 5 * i),
             maxLevel: Array.from({ length: 19 }, (x, i) => -45 + 5 * i),
-            useFaceAngle: [true, false]
-          }
-        }
+            useFaceAngle: [true, false],
+          },
+        },
       });
       logger.debug("stateTrace", stateTrace);
       logger.debug("repair output", output);
