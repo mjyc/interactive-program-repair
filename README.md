@@ -2,6 +2,8 @@
 
 Interactive program repair in JavaScript.
 
+This repo is based on "Iterative Repair of Social Robot Programs from Implicit User Feedback via Bayesian Inference" published in [RSS](https://roboticsconference.org/)2020.
+
 ## Examples
 
 ### Neck Exercise Program Repair
@@ -43,3 +45,9 @@ node examples/repair/main path_to_simulated_human_inputs # run repair with the g
 ```
 
 See [`./pkgs/callbag-fsm/demo4repair.js`](./pkgs/callbag-fsm/demo4repair.js) for a human simulator implementation; details are available at [`./pkgs/callbag-fsm`](./pkgs/callbag-fsm).
+
+## Thank you
+
+- [Maya Cakmak](https://github.com/mayacakmak) for her support
+- [Julie L. Newcomb](https://jn80842.github.io/) for inspiring discussions
+- [Nicolas Dubien](https://github.com/dubzzz) for creating [fast-check](https://github.com/dubzzz/fast-check) where I learned about [model-based testing](https://github.com/dubzzz/fast-check/blob/master/documentation/1-Guides/Tips.md)
