@@ -14,6 +14,7 @@ First, install nodejs (>= v10.16.0) and npm (>= 6.9.0). Then
   ```
   cd tools/robot;
   npm install;
+  npm build;
   npm start;
   ```
 

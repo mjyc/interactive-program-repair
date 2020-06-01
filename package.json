@@ -1,10 +1,10 @@
 {
   "name": "interactive-program-repair",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Interactive program repair in JavaScript",
   "main": "repair.js",
   "scripts": {
-    "postinstall": "cd pkgs/tabletrobotface-starter-lib && npm install && npm run build && cd ../callbag-fsm && npm install",
+    "build": "cd pkgs/tabletrobotface-starter-lib && npm install && npm run build && cd ../callbag-fsm && npm install",
     "test": "npx jest"
   },
   "author": "Michael Jae-Yoon Chung",
