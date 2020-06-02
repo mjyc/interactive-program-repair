@@ -11,12 +11,12 @@ This repo is based on "Iterative Repair of Social Robot Programs from Implicit U
 First, install nodejs (>= v10.16.0) and npm (>= 6.9.0). Then
 
 1. Run the neck exercise program (or use [Codesandbox](https://codesandbox.io/s/github/mjyc/interactive-program-repair/tree/master/tools/robot)):
-  ```
-  cd tools/robot;
-  npm install;
-  npm build;
-  npm start;
-  ```
+    ```
+    cd tools/robot;
+    npm install;
+    npm build;
+    npm start;
+    ```
 
 2. Follow the instructions. Once done, scroll down to find the "Download" button and click it to download the human-robot-interaction traces.
     - Note: you can review recorded data by running
@@ -28,11 +28,11 @@ First, install nodejs (>= v10.16.0) and npm (>= 6.9.0). Then
       ```
 
 3. Run
-  ```
-  cd examples/example_program_repair
-  node main.js downloaded_fileprefix/traces_{date}.json
-  ```
-  The output shows repaired program parameters.
+    ```
+    cd examples/example_program_repair
+    node main.js downloaded_fileprefix/traces_{date}.json
+    ```
+    The output shows repaired program parameters.
 
 ### Testing Repair via a Human Simulator
 
