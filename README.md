@@ -2,7 +2,7 @@
 
 Interactive program repair in JavaScript.
 
-This repo is based on "Iterative Repair of Social Robot Programs from Implicit User Feedback via Bayesian Inference" published in [RSS](https://roboticsconference.org/)2020.
+This repo is based on ["Iterative Repair of Social Robot Programs from Implicit User Feedback via Bayesian Inference"](https://www.researchgate.net/publication/342426034_Iterative_Repair_of_Social_Robot_Programs_from_Implicit_User_Feedback_via_Bayesian_Inference) published in [RSS](https://roboticsconference.org/)2020.
 
 ## Examples
 
